@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import sys
-import time
-import copy
 import signal
 import json
 import numpy as np
@@ -21,7 +19,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
-'''
+''' -- Sibyl Event Viewer
 |------------------------------------------|
 |Main|Crate|...|                           |
 |------------------------------------------|
