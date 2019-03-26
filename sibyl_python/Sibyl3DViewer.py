@@ -7,22 +7,25 @@ class Sibyl3DViewer(gl.GLViewWidget):
     App = None
     can_idx = []
     can_clr = []
-    def __init__(self, plot, app=None):
+    def __init__(self, plot, paths, app=None):
         if self.App is None:
             if app is not None:
                 self.App = app
             else:
                 self.App = QtGui.QApplication([])
         super(Sibyl3DViewer,self).__init__()
+        self.paths = paths
         self.Poss = []
         self.Plot = plot
         self.addItem(self.Plot)
+        self.addItem(self.paths)
         self._downpos = []
         # init camera
         self.setCameraPosition(pos=np.array([0, 0, 0]))
         self.opts['elevation'] = 25 
         self.opts['distance'] = 30000
         self.opts['azimuth'] = 0 
+        self.update()
 
     # All keyboard and mouse event handlers
     def keyPressEvent(self, ev):
