@@ -114,9 +114,9 @@ class MainWindow(QtGui.QWidget):
         print(self.flatMapWindow.opts)
 
         ## Now the 3D graph
-        self.plot3DView = gl.GLScatterPlotItem()
+        self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
         self.plotTracks = gl.GLLinePlotItem(mode='lines', color=(1,0,0,0.1))
-        self.plotFlatMap = gl.GLScatterPlotItem()
+        self.plotFlatMap = gl.GLScatterPlotItem(pxMode=False, size=300)
         self.newEvent()
         self.glWin = Sibyl3DViewer(self.plot3DView, self.plotTracks, self.App)
         #self.layout.addWidget(self.glWin,1,0,4,1)
@@ -190,22 +190,22 @@ class MainWindow(QtGui.QWidget):
     def readRat(self):
         event =int(self.event.text())
         thisEvent = self.ds.GetEvent(event)
-        if thisEvent.GetEVCount() <= 0:
-            return
-        self.ev = thisEvent.GetEV(0)
-        npmt = self.ev.GetPMTCount()
         allpmt = self.pmt_info.GetPMTCount()
         self.posArray = np.zeros((allpmt, 3))
         self.pmtidArray = np.zeros((allpmt))
         self.CHARGE = np.zeros((allpmt))-100
         self.TIME = np.zeros((allpmt))-100
-        self.plWeights = np.zeros((allpmt)) + 3#3 is minimum point size?
+        self.plWeights = np.zeros((allpmt)) + 100#3 is minimum point size?
         for pmt_id in range(allpmt):
             pmtx = self.pmt_info.GetPosition(pmt_id).X()
             pmty = self.pmt_info.GetPosition(pmt_id).Y()
             pmtz = self.pmt_info.GetPosition(pmt_id).Z()
             self.pmtidArray[pmt_id] = pmt_id
             self.posArray[pmt_id] = np.array([pmtx, pmty, pmtz])
+        if thisEvent.GetEVCount() <= 0:
+            return
+        self.ev = thisEvent.GetEV(0)
+        npmt = self.ev.GetPMTCount()
 
         for pmt in range(npmt):
             thispmt = self.ev.GetPMT(pmt)
@@ -213,7 +213,7 @@ class MainWindow(QtGui.QWidget):
             self.CHARGE[pid] = thispmt.GetCharge()
             self.TIME[pid] = thispmt.GetTime()
             # if hit increase weight
-            self.plWeights[pid] = 10
+            self.plWeights[pid] = 300
 
     def readRatTracking(self):
         # Clear last event
@@ -301,7 +301,7 @@ class MainWindow(QtGui.QWidget):
         posY = (self.posArray.T)[1]
         posZ = (self.posArray.T)[2]
         posRho = (posX**2 + posY**2)**0.5
-        theta = np.arctan2(posY, posX) * posRho
+        theta = np.arctan2(posX, posY) * posRho
         ## Move this to a detector class, but for now, arbitrarily define
         ## various regions.
         ## displace top and bottom
@@ -321,7 +321,7 @@ class MainWindow(QtGui.QWidget):
         # Top Circle
         topSelect = (posZ>=zCut)&(posZ<vetoH)
         topShift = zCut*2.1 #1.5
-        topX, topY = posX[topSelect], posY[topSelect] + topShift
+        topX, topY = posX[topSelect], -posY[topSelect] + topShift
         topPOS = np.array([topX, topY, np.zeros(len(topX))]).T
         topCLR = self.colorArray[topSelect]
         #self.plotFlatMap.setData(x=topX, y=topY, z=self.CHARGE[topSelect])
