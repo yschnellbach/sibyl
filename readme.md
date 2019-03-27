@@ -13,28 +13,36 @@ and be cross-platform, with the only strong dependency being on rat-pac.
 Dependencies
 ------------
 ### Required
-Python3
-PyQt5
-PyQtGraph
-python-opengl
-rat-pac
+  Python3
+  PyQt5
+  PyQtGraph
+  python-opengl
+  rat-pac
 ### Optional
-Plotly -- Useful for a web conversion, not currently implemented.
+- Plotly -- Useful for a web conversion, not currently implemented.
+- SnakeViz is nice for visualizing cProfile
 
 TODO
 ----
-Setup bonsai library for just-in-time fitting.
-Factorize the code
-Align the flatmap view
-(in ratpac) fix the top PMT geometry to circles
-Split module view
-File menu: Quit button.
-Save state as json
+- Setup bonsai library for just-in-time fitting.
+- Factorize the code
+- Align the flatmap view
+- (in ratpac) fix the top PMT geometry to circles
+- Split module view
+- File menu: Quit button.
+  - Quit button
+  - Load data file
+- Save state as json
+- Datastream simulator & datastream reading
+  - Define a speed requirement. Maybe 4-10Hz at full occupancy.
+- Geometry helper
+  - Helps the flatmap view know where to make PMT cuts
+  - Could be used to draw in Geant4 objects.
 
-Determine if I can drop the pyqtgraph dependency in favor of
+- Determine if I can drop the pyqtgraph dependency in favor of
 just python-opengl
 
 
 Profile:
-python -m cProfile -o profile.out sibyl.py data.root
-Install runsnakerun to view the profile graphically.
+- python -m cProfile -o profile.out sibyl.py data.root
+- snakeviz profile.out

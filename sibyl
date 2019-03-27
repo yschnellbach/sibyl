@@ -50,8 +50,9 @@ class MainWindow(QtGui.QWidget):
     ''' Set by rat '''
     entries = 999
 
-    def __init__(self, fname, app=None):
-        self.fname = fname
+    def __init__(self, args, app=None):
+        self.args = args
+        self.fname = self.args.ratfile
         if self.App is None:
             if app is not None:
                 self.App = app
@@ -160,7 +161,8 @@ class MainWindow(QtGui.QWidget):
 
     def updateEvent(self):
         self.readRat()
-        self.readRatTracking()
+        if self.args.tracking:
+            self.readRatTracking()
         self.drawEvent()
 
     def newEvent(self):
@@ -369,7 +371,11 @@ class MainWindow(QtGui.QWidget):
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('ratfile', type=str, help=('rat root file'))
-    parser.add_argument('--debug', action='store_true')
+    parser.add_argument('--debug', action='store_true', 
+            help='Turn on debug print statements')
+    parser.add_argument('--tracking', action='store_true',
+            help='ROOT files only. If storeTracking was used during simulation,\
+            then the particle tracks will be drawn.')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -382,6 +388,5 @@ if __name__ == '__main__':
     timer = QtCore.QTimer()
     timer.start(500)
     timer.timeout.connect(lambda: None)
-    guit = MainWindow(args.ratfile)
-
+    guit = MainWindow(args)
     sys.exit(app.exec_())
