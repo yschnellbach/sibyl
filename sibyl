@@ -338,7 +338,7 @@ class MainWindow(QtGui.QWidget):
         cmap = cm.jet
         for val in variable:
             if val < true_min:
-                colorList.append(cm.Greys(100))
+                colorList.append([1,1,1,0.25])
             else:
                 try:
                 #colorList.append(cm.jet(int((val-min_var)*(256/var_range))))

@@ -17,7 +17,7 @@ Dependencies
   PyQt5
   PyQtGraph
   python-opengl
-  rat-pac
+  rat-pac (compiled with ROOT-6)
 ### Optional
 - Plotly -- Useful for a web conversion, not currently implemented.
 - SnakeViz is nice for visualizing cProfile
