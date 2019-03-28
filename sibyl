@@ -19,6 +19,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
+pg.setConfigOptions(antialias=True)
+
 ''' -- Sibyl Event Viewer
 |------------------------------------------|
 |Main|Crate|...|                           |
@@ -108,20 +110,22 @@ class MainWindow(QtGui.QWidget):
         self.layout.addWidget(self.plotHistogram,6,8,3,4)
 
         # Flat-map goes here
-        self.flatMapWindow = gl.GLViewWidget()
-        self.flatMapWindow.opts['elevation'] = 90 
-        self.flatMapWindow.opts['distance'] = 35000
-        self.flatMapWindow.opts['azimuth'] = -90 
-        print(self.flatMapWindow.opts)
+        #self.flatMapWindow = gl.GLViewWidget()
+        #self.flatMapWindow.opts['elevation'] = 90 
+        #self.flatMapWindow.opts['distance'] = 35000
+        #self.flatMapWindow.opts['azimuth'] = -90 
+        #print(self.flatMapWindow.opts)
 
         ## Now the 3D graph
         self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
         self.plotTracks = gl.GLLinePlotItem(mode='lines', color=(1,0,0,0.1))
-        self.plotFlatMap = gl.GLScatterPlotItem(pxMode=False, size=300)
+        #self.plotFlatMap = gl.GLScatterPlotItem(pxMode=False, size=300)
+        self.plotFlatMap = SibylWatchmanFlat()
         self.newEvent()
         self.glWin = Sibyl3DViewer(self.plot3DView, self.plotTracks, self.App)
+        self.flatMapWindow = Sibyl2DViewer(self.plotFlatMap, self.App)
         #self.layout.addWidget(self.glWin,1,0,4,1)
-        self.flatMapWindow.addItem(self.plotFlatMap)
+        #self.flatMapWindow.addItem(self.plotFlatMap)
         self.layout.addWidget(self.flatMapWindow,1,0,8,8)
         self.layout.addWidget(self.glWin,1,8,5,8)
 
@@ -188,6 +192,22 @@ class MainWindow(QtGui.QWidget):
         self.pmt_info = self.run.GetPMTInfo()
         self.entries = self.ds.GetTotal()
         dprint('Total entries:', self.entries)
+        ## Get and store the macro used (if available)
+        self.macro = str(f.Get('macro')).splitlines()
+        self.macro = [m for m in self.macro if not m.startswith('#') and m != ''] 
+        dprint(self.macro)
+        ## Temp code, to be moved, builds geometry if allowed
+        # I wonder If i know the location of geometry components,
+        # can I get it from rat? I think everything we need is in
+        # the root file under db
+        self.db = self._tmap_to_dict(f.Get('db'))
+    
+    # Helper function, root TMap to python dict, this one for strings
+    def _tmap_to_dict(self,tmap):
+        tdict = {}
+        for k in tmap:
+            tdict[str(k)] = str(tmap.GetValue(k))
+        return tdict
 
     def readRat(self):
         event =int(self.event.text())
@@ -284,6 +304,11 @@ class MainWindow(QtGui.QWidget):
             self.plot3DView.color = self.colorArray
             self.plot3DView.size = self.plWeights
             self.plot3DView.update()
+        ## 2D Viewport
+        self.plotFlatMap.setPosition(self.posArray)
+        self.plotFlatMap.setColor(self.colorArray)
+        self.plotFlatMap.setWeights(self.plWeights)
+        self.plotFlatMap.update()
 
         ## Histogram
         self.plotHistogram.clear()
@@ -297,52 +322,6 @@ class MainWindow(QtGui.QWidget):
         ax = self.pFig.add_subplot(111)
         ax.plot(hx[1:], hy)
 
-        ## Flat test
-        posR = np.sum(self.posArray**2, axis=1)**0.5
-        posX = (self.posArray.T)[0]
-        posY = (self.posArray.T)[1]
-        posZ = (self.posArray.T)[2]
-        posRho = (posX**2 + posY**2)**0.5
-        theta = np.arctan2(posX, posY) * posRho
-        ## Move this to a detector class, but for now, arbitrarily define
-        ## various regions.
-        ## displace top and bottom
-        zCut = 6300
-        rCut = 6400
-        vetoH = 6500
-        flatSelect = (posZ<zCut)&(posZ>-zCut)&(posRho<rCut)
-        flatPOS = np.array([theta[flatSelect], posZ[flatSelect], np.zeros(len(theta[flatSelect]))]).T
-        flatCLR = self.colorArray[flatSelect]
-        #brushes = self.colorArray[flatSelect].tolist()
-        #brushes = [tuple(br) for br in brushes]
-        #print(brushes[0])
-        # Flat region
-        #self.plotFlatMap.plot(theta[flatSelect], posZ[flatSelect], pen=None, 
-        #        symbol='o')
-                #symbolBrushes=[pg.mkBrush(br) for br in brushes] )
-        # Top Circle
-        topSelect = (posZ>=zCut)&(posZ<vetoH)
-        topShift = zCut*2.1 #1.5
-        topX, topY = posX[topSelect], -posY[topSelect] + topShift
-        topPOS = np.array([topX, topY, np.zeros(len(topX))]).T
-        topCLR = self.colorArray[topSelect]
-        #self.plotFlatMap.setData(x=topX, y=topY, z=self.CHARGE[topSelect])
-        #self.plotFlatMap.update()
-        #self.plotFlatMap.plot(topX, topY, pen=None, symbol='o')
-        # Bot Circle
-        botSelect = (posZ<=-zCut)&(posZ>-vetoH)
-        botShift = -zCut*2.1 #1.5
-        botX, botY = posX[botSelect], posY[botSelect] + botShift
-        botPOS = np.array([botX, botY, np.zeros(len(botX))]).T
-        botCLR = self.colorArray[botSelect]
-        #self.plotFlatMap.plot(botX, botY, pen=None, symbol='o')
-
-        totalPOS = np.concatenate([topPOS, botPOS, flatPOS])
-        totalCLR = np.concatenate([topCLR, botCLR, flatCLR])
-
-        self.plotFlatMap.pos = totalPOS
-        self.plotFlatMap.color = totalCLR
-        self.plotFlatMap.update()
 
     def colorize(self):
         # choose color mask, charge for now
@@ -367,6 +346,9 @@ class MainWindow(QtGui.QWidget):
                 except ValueError:
                     print('color problem')
         self.colorArray = np.array(colorList)
+        ## Invisible hack
+        if self.args.invisible:
+            self.colorArray *= 0
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -376,6 +358,8 @@ def get_args():
     parser.add_argument('--tracking', action='store_true',
             help='ROOT files only. If storeTracking was used during simulation,\
             then the particle tracks will be drawn.')
+    parser.add_argument('--invisible', action='store_true',
+            help='This is a hack, remove eventually')
     return parser.parse_args()
 
 if __name__ == '__main__':

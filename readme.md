@@ -26,8 +26,6 @@ TODO
 ----
 - Setup bonsai library for just-in-time fitting.
 - Factorize the code
-- Align the flatmap view
-- (in ratpac) fix the top PMT geometry to circles
 - Split module view
 - File menu: Quit button.
   - Quit button
@@ -38,6 +36,7 @@ TODO
 - Geometry helper
   - Helps the flatmap view know where to make PMT cuts
   - Could be used to draw in Geant4 objects.
+- Option to run as single window widgets.
 
 - Determine if I can drop the pyqtgraph dependency in favor of
 just python-opengl

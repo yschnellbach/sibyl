@@ -20,16 +20,22 @@ class Sibyl3DViewer(gl.GLViewWidget):
         self.addItem(self.Plot)
         self.addItem(self.paths)
         self._downpos = []
+        self._init_camera()
+        self.update()
+
+    def _init_camera(self):
         # init camera
+        self.opts['center'] = QtGui.QVector3D(0, 0, 0)
         self.setCameraPosition(pos=np.array([0, 0, 0]))
         self.opts['elevation'] = 25 
         self.opts['distance'] = 30000
         self.opts['azimuth'] = 0 
-        self.update()
 
     # All keyboard and mouse event handlers
     def keyPressEvent(self, ev):
         super(Sibyl3DViewer,self).keyPressEvent(ev)
+        if ev.key() == ord(' '):
+            self._init_camera()
         if ev.key() == ord('O'):
             self.orbit(45, 45)
 
