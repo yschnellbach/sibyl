@@ -2,6 +2,7 @@
 import sys
 import signal
 import json
+import time
 import numpy as np
 import matplotlib.cm as cm
 import argparse
@@ -10,12 +11,15 @@ import pyqtgraph.opengl as gl
 import rat
 import ROOT
 import ctypes as ct
-from PyQt5 import QtGui, QtCore
+from PyQt5 import *
+from PyQt5.QtOpenGL import *
 import _thread
 from sibyl_python import *
 
 ## Some matplotlib
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import (
+        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 
@@ -30,8 +34,8 @@ pg.setConfigOptions(antialias=True)
 |         --         |                     |
 | ------------------ |                     |
 | |                | |----------|----------|
-| |________________| |          |          |          |
-|         --         |          |
+| |________________| |          |          |
+|         --         |          |          |
 |        -  -        |          |          |
 |         --         |          |          |
 |------------------------------------------|
@@ -46,14 +50,16 @@ class MainWindow(QtGui.QWidget):
     '''
     App = None
     plot = None
-    colorMask = 'Charge'
-    isLog = False
+    parameters = {}
+    config = {}
 
     ''' Set by rat '''
     entries = 999
 
     def __init__(self, args, app=None):
         self.args = args
+        self._default_parameters()
+        # Icon
         self.fname = self.args.ratfile
         if self.App is None:
             if app is not None:
@@ -61,8 +67,24 @@ class MainWindow(QtGui.QWidget):
             else:
                 self.App = QtGui.QApplication([])
         super(MainWindow,self).__init__()
+        self.trayIcon = SibylTrayIcon()
+        self.trayIcon.show()
+        #self.App.setWindowIcon(QtGui.QIcon('wmlogo.png'))
+        #self.setWindowIcon(QtGui.QIcon('wmlogo.png'))
         self.beginRat()
         self.buildLayout()
+
+    def _default_parameters(self):
+        '''
+        The parameters dictionary is used to allow widgets
+        to share and update information. Must be careful to
+        make sure multiple modules dont set the same parameter.
+        '''
+        self.parameters["name"] = "Sibyl"
+        self.parameters["autoRange"] = True
+        self.parameters["colorMask"] = 'charge'
+        self.parameters["histXMax"] = 1
+        self.parameters["histYMax"] = 1
 
     def buildLayout(self):
         formGroupBox = QtGui.QGroupBox()
@@ -97,24 +119,18 @@ class MainWindow(QtGui.QWidget):
         ## Top bar:
         self.layout.addWidget(formGroupBox,0,0,1,16)
         ## EV Info panel
-        self.pFig = Figure()
-        self.figCanvas = FigureCanvas(self.pFig)
+        #self.pFig = Figure()
+        #self.pAxis = self.pFig.add_subplot(111)
+        #self.figCanvas = FigureCanvas(self.pFig)
+        self.figCanvas = SibylHistogram(self)
         #evinfoGroupBox = QtGui.QGroupBox()
         self.layout.addWidget(self.figCanvas,6,12,3,4)
+
+        # If we want to pop-out widgets instead of putting them
+        # into a layout, simply use widget.show() i.e.
+        # self.figCanvas.show()
+
         #self.layout.addWidget(evinfoGroupBox,6,12,3,4)
-
-        ## Histogram
-        #histGroupBox = QtGui.QGroupBox()
-        self.plotHistogram = pg.PlotWidget(name='Histogram')
-        self.plotHistogram.setLimits(xMin=0, yMin=0)
-        self.layout.addWidget(self.plotHistogram,6,8,3,4)
-
-        # Flat-map goes here
-        #self.flatMapWindow = gl.GLViewWidget()
-        #self.flatMapWindow.opts['elevation'] = 90 
-        #self.flatMapWindow.opts['distance'] = 35000
-        #self.flatMapWindow.opts['azimuth'] = -90 
-        #print(self.flatMapWindow.opts)
 
         ## Now the 3D graph
         self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
@@ -129,11 +145,6 @@ class MainWindow(QtGui.QWidget):
         self.layout.addWidget(self.flatMapWindow,1,0,8,8)
         self.layout.addWidget(self.glWin,1,8,5,8)
 
-        # Fake 3d-2d
-        #evinfoGroupBox = QtGui.QGroupBox()
-
-
-
         # Fix the column and row stretch
         for r in range(9):
             self.layout.setRowStretch(r, 1)
@@ -143,10 +154,10 @@ class MainWindow(QtGui.QWidget):
         self.show()
 
     def toggleColorMode(self):
-        if self.colorMask == 'charge':
-            self.colorMask = 'time'
+        if self.parameters['colorMask'] == 'charge':
+            self.parameters['colorMask'] = 'time'
         else:
-            self.colorMask = 'charge'
+            self.parameters['colorMask'] = 'charge'
         self.drawEvent()
 
     def leftEvent(self):
@@ -310,22 +321,25 @@ class MainWindow(QtGui.QWidget):
         self.plotFlatMap.setWeights(self.plWeights)
         self.plotFlatMap.update()
 
-        ## Histogram
-        self.plotHistogram.clear()
-        hy,hx = np.histogram(self.CHARGE[self.CHARGE>0], bins=100)
-        #for x,y in zip(hx[:-1], hy):
-        #    self.plotHistogram.plot([x,x+w], [y, y] )
-        
-        self.plotHistogram.plot(hx, hy, stepMode=True, fillLevel=0,
-                brush=(0,0,255,150))
-        ## Version-2
-        ax = self.pFig.add_subplot(111)
-        ax.plot(hx[1:], hy)
+        if self.parameters['colorMask'] == 'charge':
+            variable = self.CHARGE
+        else:
+            variable = self.TIME
+        self.figCanvas.setData(variable)
 
+    def drawColors(self):
+        '''
+        Only update colors, not positions or sizes
+        '''
+        self.colorize()
+        self.plot3DView.color = self.colorArray
+        self.plot3DView.update()
+        self.plotFlatMap.setColor(self.colorArray)
+        self.plotFlatMap.update()
 
     def colorize(self):
         # choose color mask, charge for now
-        if self.colorMask == 'charge':
+        if self.parameters['colorMask'] == 'charge':
             variable = self.CHARGE
         else:
             variable = self.TIME
@@ -333,12 +347,19 @@ class MainWindow(QtGui.QWidget):
         true_min = 0.0
         min_var = max(true_min, min(variable))
         max_var = max(variable)
+        ## Override
+        min_var = true_min
+        max_var = self.parameters["histXMax"]
+        if self.args.onlyHits:
+            null_color = [1,1,1,0.0]
+        else:
+            null_color = [1,1,1,0.25]
         var_range = max_var - min_var
         colorList = []
         cmap = cm.jet
         for val in variable:
             if val < true_min:
-                colorList.append([1,1,1,0.25])
+                colorList.append(null_color)
             else:
                 try:
                 #colorList.append(cm.jet(int((val-min_var)*(256/var_range))))
@@ -360,6 +381,10 @@ def get_args():
             then the particle tracks will be drawn.')
     parser.add_argument('--invisible', action='store_true',
             help='This is a hack, remove eventually')
+    parser.add_argument('--onlyHits', action='store_true',
+            help='Show only hit pmts')
+    parser.add_argument('--stream', action='store_true',
+            help='Hack to test streaming capabilities')
     return parser.parse_args()
 
 if __name__ == '__main__':
@@ -369,8 +394,11 @@ if __name__ == '__main__':
         if args.debug:
             print(*argmnt)
     app = QtGui.QApplication([])
-    timer = QtCore.QTimer()
-    timer.start(500)
-    timer.timeout.connect(lambda: None)
     guit = MainWindow(args)
+
+    # This loops through events, potentially a way to update a stream
+    #timer = QtCore.QTimer()
+    #timer.timeout.connect(guit.rightEvent)
+    #timer.start(1)
+
     sys.exit(app.exec_())
