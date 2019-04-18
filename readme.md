@@ -1,7 +1,5 @@
 Sibyl - A watchman event viewer
 ===============================
-![SibylLogo](/assets/SherlockWM.png)
-
 Why sibyl: They were oracles which gleamed information from Chthonic
 dieties---ie they got their information from within the earth (underground).
 The most famous of which was the Pythia, high priestess of the temple of Apollo
