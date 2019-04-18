@@ -23,40 +23,40 @@ Dependencies
 
 TODO
 ----
-[] Setup bonsai library for just-in-time fitting.
-  [] libBonsai.so
-  [] Bonsai in python
-  [] Fit button (print to screen)
-  [] Fit, print to QT textdocument
-  [] Draw cherenkov ring
-[] Factorize the code
-  [] Make geometry independent
-  [] Include geometry files
-  [] Module base class
-[] Colors
+[ ] Setup bonsai library for just-in-time fitting.
+  [ ] libBonsai.so
+  [ ] Bonsai in python
+  [ ] Fit button (print to screen)
+  [ ] Fit, print to QT textdocument
+  [ ] Draw cherenkov ring
+[ ] Factorize the code
+  [ ] Make geometry independent
+  [ ] Include geometry files
+  [ ] Module base class
+[ ] Colors
   [x] Make color choice global.
-  [] Choose from MPL code in context menu
-[] Context menus
-  [] Test different types for each module
-[] Split module view
-[] File menu: Quit button.
-  [] Quit button
-  [] Load data file
-[] Save state as json
-[] Datastream simulator & datastream reading
-  [] Define a speed requirement. Maybe 4-10Hz at full occupancy.
-[] Geometry helper
-  [] Helps the flatmap view know where to make PMT cuts
-  [] Could be used to draw in Geant4 objects.
-[] Histrogram
-  [] Axis labels
-  [] Swap colors
-  [] Control global colors
-  [] Axis ticks
-  [] Axis tick numbers
-[] Option to run as single window widgets.
+  [ ] Choose from MPL code in context menu
+[ ] Context menus
+  [ ] Test different types for each module
+[ ] Split module view
+[ ] File menu: Quit button.
+  [ ] Quit button
+  [ ] Load data file
+[ ] Save state as json
+[ ] Datastream simulator & datastream reading
+  [ ] Define a speed requirement. Maybe 4-10Hz at full occupancy.
+[ ] Geometry helper
+  [ ] Helps the flatmap view know where to make PMT cuts
+  [ ] Could be used to draw in Geant4 objects.
+[ ] Histrogram
+  [ ] Axis labels
+  [ ] Swap colors
+  [ ] Control global colors
+  [ ] Axis ticks
+  [ ] Axis tick numbers
+[ ] Option to run as single window widgets.
 
-[] Determine if I can drop the pyqtgraph dependency in favor of
+[ ] Determine if I can drop the pyqtgraph dependency in favor of
 just python-opengl
 
 
