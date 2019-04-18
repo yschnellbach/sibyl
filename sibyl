@@ -10,38 +10,53 @@ import pyqtgraph as pg
 import pyqtgraph.opengl as gl
 import rat
 import ROOT
-import ctypes as ct
+from sibyl_cpp import *
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
 import _thread
 from sibyl_python import *
 
-## Some matplotlib
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import (
-        FigureCanvas, NavigationToolbar2QT as NavigationToolbar)
-from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-
 pg.setConfigOptions(antialias=True)
 
-''' -- Sibyl Event Viewer
+''' -- Sibyl Event Viewer --> Central Widget
 |------------------------------------------|
 |Main|Crate|...|                           |
 |------------------------------------------|
-|         --         |                     |
-|        -  -        |                     |
-|         --         |                     |
-| ------------------ |                     |
+|         --         |     .^.^.^.^.       |
+|        -  -        |    /         \      |
+|         --         |   /    3D     \     |
+| ------------------ |  /             \    |
 | |                | |----------|----------|
-| |________________| |          |          |
-|         --         |          |          |
-|        -  -        |          |          |
-|         --         |          |          |
+| |________________| | Info     |_    Hist |
+|         --         | Panel    | |__  Q/T |
+|        -  -        |          |    |_    |
+|         --         |          |      |__ |
 |------------------------------------------|
+
+Central Widget is contained in the MainWindow as:
+|-----------------------------------------|
+| Menu Bar                                |
+|-----------------------------------------|
+|                Toolbars                 |
+|  |-----------------------------------|  |
+|  |           Dock Widgets            |  |
+|  |  |-----------------------------|  |  |
+|  |  |                             |  |  |
+|  |  |                             |  |  |
+|  |  |       Central Widget        |  |  |
+|  |  |                             |  |  |
+|  |  |                             |  |  |
+|  |  |-----------------------------|  |  |
+|  |                                   |  |
+|  |-----------------------------------|  |
+|                                         |
+|-----------------------------------------|
+| Status Bar                              |
+|-----------------------------------------|
 '''
 
-class MainWindow(QtGui.QWidget):
+#class MainWindow(QtGui.QWidget):
+class MainWindow(QtGui.QMainWindow):
     '''
     Order of operations:
     1. Create the main window
@@ -85,6 +100,15 @@ class MainWindow(QtGui.QWidget):
         self.parameters["colorMask"] = 'charge'
         self.parameters["histXMax"] = 1
         self.parameters["histYMax"] = 1
+        self.parameters["colorMap"] = cm.cividis
+        self.parameters["colorMap"] = cm.viridis
+
+
+
+    def keyPressEvent(self, ev):
+        if ( (ev.modifiers() & QtCore.Qt.ControlModifier) and
+             (ev.key() == ord('W')) ):
+            self.close()
 
     def buildLayout(self):
         formGroupBox = QtGui.QGroupBox()
@@ -114,6 +138,13 @@ class MainWindow(QtGui.QWidget):
         chargeTime_button.clicked.connect(self.toggleColorMode)
         self.hboxchooser.addWidget(chargeTime_button)
 
+        ## Fit current event
+        fit_button = QtGui.QPushButton()
+        fit_button.clicked.connect(self.performFit)
+        fit_button.setIcon(QtGui.QIcon('assets/bonsai.png'))
+        fit_button.setToolTip('Bonsai!')
+        self.hboxchooser.addWidget(fit_button)
+
         ## Put form together
         formGroupBox.setLayout(formLayout)
         ## Top bar:
@@ -122,7 +153,7 @@ class MainWindow(QtGui.QWidget):
         #self.pFig = Figure()
         #self.pAxis = self.pFig.add_subplot(111)
         #self.figCanvas = FigureCanvas(self.pFig)
-        self.figCanvas = SibylHistogram(self)
+        self.figCanvas = SibylHistogram(self.App, self)
         #evinfoGroupBox = QtGui.QGroupBox()
         self.layout.addWidget(self.figCanvas,6,12,3,4)
 
@@ -130,7 +161,7 @@ class MainWindow(QtGui.QWidget):
         # into a layout, simply use widget.show() i.e.
         # self.figCanvas.show()
 
-        #self.layout.addWidget(evinfoGroupBox,6,12,3,4)
+        #layout.addWidget(evinfoGroupBox,6,12,3,4)
 
         ## Now the 3D graph
         self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
@@ -150,8 +181,18 @@ class MainWindow(QtGui.QWidget):
             self.layout.setRowStretch(r, 1)
         for c in range(16):
             self.layout.setColumnStretch(c, 1)
-        self.setLayout(self.layout)
+        mainWidget = QtGui.QWidget()
+        mainWidget.setLayout(self.layout)
+        self.setCentralWidget(mainWidget)
         self.show()
+
+    def _toolbar_setup(self):
+        self.toolbar = QtGui.QToolBar()
+        # Quit Button
+        quitButton = QtGui.QPushButton("X")
+
+    def performFit(self):
+        print('Bonsai!')
 
     def toggleColorMode(self):
         if self.parameters['colorMask'] == 'charge':
@@ -194,24 +235,10 @@ class MainWindow(QtGui.QWidget):
 
     ## Rat, moveme to rat class
     def beginRat(self):
-        self.ds = rat.RAT.DSReader(self.fname)
-        f = ROOT.TFile(self.fname)
-        t = f.Get('runT')
-        self.run = rat.RAT.DS.Run()
-        t.SetBranchAddress('run', ROOT.AddressOf(self.run))
-        t.GetEntry(0)
-        self.pmt_info = self.run.GetPMTInfo()
-        self.entries = self.ds.GetTotal()
-        dprint('Total entries:', self.entries)
-        ## Get and store the macro used (if available)
-        self.macro = str(f.Get('macro')).splitlines()
-        self.macro = [m for m in self.macro if not m.startswith('#') and m != ''] 
-        dprint(self.macro)
-        ## Temp code, to be moved, builds geometry if allowed
-        # I wonder If i know the location of geometry components,
-        # can I get it from rat? I think everything we need is in
-        # the root file under db
-        self.db = self._tmap_to_dict(f.Get('db'))
+        self.cobra = snake()
+        self.cobra.openFile(self.fname)
+        self.posArray = np.array(self.cobra.getXYZ()).T
+        self.entries = self.cobra.getEntries()
     
     # Helper function, root TMap to python dict, this one for strings
     def _tmap_to_dict(self,tmap):
@@ -222,31 +249,11 @@ class MainWindow(QtGui.QWidget):
 
     def readRat(self):
         event =int(self.event.text())
-        thisEvent = self.ds.GetEvent(event)
-        allpmt = self.pmt_info.GetPMTCount()
-        self.posArray = np.zeros((allpmt, 3))
-        self.pmtidArray = np.zeros((allpmt))
-        self.CHARGE = np.zeros((allpmt))-100
-        self.TIME = np.zeros((allpmt))-100
-        self.plWeights = np.zeros((allpmt)) + 100#3 is minimum point size?
-        for pmt_id in range(allpmt):
-            pmtx = self.pmt_info.GetPosition(pmt_id).X()
-            pmty = self.pmt_info.GetPosition(pmt_id).Y()
-            pmtz = self.pmt_info.GetPosition(pmt_id).Z()
-            self.pmtidArray[pmt_id] = pmt_id
-            self.posArray[pmt_id] = np.array([pmtx, pmty, pmtz])
-        if thisEvent.GetEVCount() <= 0:
-            return
-        self.ev = thisEvent.GetEV(0)
-        npmt = self.ev.GetPMTCount()
+        self.cobra.getEvent(event)
+        self.CHARGE, self.TIME = self.cobra.getHitInfo()
+        self.plWeights = np.zeros(len(self.CHARGE)) + 100
+        self.plWeights[self.CHARGE>-99] = 300
 
-        for pmt in range(npmt):
-            thispmt = self.ev.GetPMT(pmt)
-            pid = thispmt.GetID()
-            self.CHARGE[pid] = thispmt.GetCharge()
-            self.TIME[pid] = thispmt.GetTime()
-            # if hit increase weight
-            self.plWeights[pid] = 300
 
     def readRatTracking(self):
         # Clear last event
@@ -345,8 +352,8 @@ class MainWindow(QtGui.QWidget):
             variable = self.TIME
         #variable = self.TIME
         true_min = 0.0
-        min_var = max(true_min, min(variable))
-        max_var = max(variable)
+        #min_var = max(true_min, min(variable))
+        #max_var = max(variable)
         ## Override
         min_var = true_min
         max_var = self.parameters["histXMax"]
@@ -355,18 +362,9 @@ class MainWindow(QtGui.QWidget):
         else:
             null_color = [1,1,1,0.25]
         var_range = max_var - min_var
-        colorList = []
-        cmap = cm.jet
-        for val in variable:
-            if val < true_min:
-                colorList.append(null_color)
-            else:
-                try:
-                #colorList.append(cm.jet(int((val-min_var)*(256/var_range))))
-                    colorList.append(cmap(int((val-min_var)*(256/var_range))))
-                except ValueError:
-                    print('color problem')
-        self.colorArray = np.array(colorList)
+        varNorm = (variable-min_var)*1/var_range
+        self.colorArray = self.parameters['colorMap'](varNorm)
+        self.colorArray[variable<true_min] = null_color
         ## Invisible hack
         if self.args.invisible:
             self.colorArray *= 0
@@ -397,8 +395,17 @@ if __name__ == '__main__':
     guit = MainWindow(args)
 
     # This loops through events, potentially a way to update a stream
-    #timer = QtCore.QTimer()
-    #timer.timeout.connect(guit.rightEvent)
-    #timer.start(1)
+    if args.stream:
+        start_time = time.time()
+        def handler():
+            eid = int(guit.event.text())
+            if eid>80:
+                timer.stop()
+                print('Frequency:', (eid+1)/(time.time()-start_time) )
+                guit.close()
+            guit.rightEvent()
+        timer = QtCore.QTimer()
+        timer.timeout.connect(handler)
+        timer.start(1)
 
     sys.exit(app.exec_())
