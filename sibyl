@@ -13,10 +13,7 @@ import ROOT
 from sibyl_cpp import *
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
-import _thread
 from sibyl_python import *
-
-pg.setConfigOptions(antialias=True)
 
 ''' -- Sibyl Event Viewer --> Central Widget
 |------------------------------------------|
@@ -55,7 +52,6 @@ Central Widget is contained in the MainWindow as:
 |-----------------------------------------|
 '''
 
-#class MainWindow(QtGui.QWidget):
 class MainWindow(QtGui.QMainWindow):
     '''
     Order of operations:
@@ -67,15 +63,15 @@ class MainWindow(QtGui.QMainWindow):
     plot = None
     parameters = {}
     config = {}
-
-    ''' Set by rat '''
-    entries = 999
+    listOfTabs = []
 
     def __init__(self, args, app=None):
         self.args = args
         self._default_parameters()
         # Icon
-        self.fname = self.args.ratfile
+        self.parameters["filename"] = self.args.ratfile
+        self.parameters["invisible"] = self.args.invisible
+        self.parameters["onlyHits"] = self.args.onlyHits
         if self.App is None:
             if app is not None:
                 self.App = app
@@ -84,10 +80,14 @@ class MainWindow(QtGui.QMainWindow):
         super(MainWindow,self).__init__()
         self.trayIcon = SibylTrayIcon()
         self.trayIcon.show()
-        #self.App.setWindowIcon(QtGui.QIcon('wmlogo.png'))
-        #self.setWindowIcon(QtGui.QIcon('wmlogo.png'))
         self.beginRat()
-        self.buildLayout()
+        self._menubarWidget()
+        #self._toolbarWidget()
+        self._statusbarWidget()
+        self._centralWidget()
+        self.show()
+        # Load in data
+        self.newEvent()
 
     def _default_parameters(self):
         '''
@@ -101,26 +101,23 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["histXMax"] = 1
         self.parameters["histYMax"] = 1
         self.parameters["colorMap"] = cm.cividis
-        self.parameters["colorMap"] = cm.viridis
+        self.parameters["entries"] = 0
+        self.parameters["charge"] = np.array([])
+        self.parameters["time"] = np.array([])
 
+    def _toolbarWidget(self):
+        bar = self.addToolBar("BARR")
+        bar.addAction("Hi")
 
-
-    def keyPressEvent(self, ev):
-        if ( (ev.modifiers() & QtCore.Qt.ControlModifier) and
-             (ev.key() == ord('W')) ):
-            self.close()
-
-    def buildLayout(self):
-        formGroupBox = QtGui.QGroupBox()
-        formLayout = QtGui.QFormLayout()
-        # Main layout = QtGui.QGridLayout()
-        self.layout = QtGui.QGridLayout()
-        # Events
+    def _statusbarWidget(self):
+        bar = self.statusBar()
+        #bar.showMessage("Hello world")
         self.total_events_line = QtGui.QLineEdit("0")
         self.total_events_line.setReadOnly(True)
-        self.total_events_line.setText(str(self.entries))
-        formLayout.addRow(QtGui.QLabel("Total Events"), self.total_events_line)
-        ## Event switcher buttons
+        self.total_events_line.setText(str(self.parameters["entries"]))
+        #bar.addWidget(QtGui.QLabel("Total Events"), self.total_events_line)
+        bar.addWidget(QtGui.QLabel("Total Events"))
+        bar.addWidget(self.total_events_line)
         left_button = QtGui.QPushButton("<")
         left_button.clicked.connect(self.leftEvent)
         right_button = QtGui.QPushButton(">")
@@ -131,75 +128,33 @@ class MainWindow(QtGui.QMainWindow):
         self.hboxchooser.addWidget(left_button)
         self.hboxchooser.addWidget(right_button)
         self.hboxchooser.addWidget(self.event)
-        formLayout.addRow(self.hboxchooser)
+        bar.addWidget(left_button)
+        bar.addWidget(right_button)
+        bar.addWidget(self.event)
+        #formLayout.addRow(self.hboxchooser)
 
-        ## Choose charge mode
-        chargeTime_button = QtGui.QPushButton("Q/T Toggle")
-        chargeTime_button.clicked.connect(self.toggleColorMode)
-        self.hboxchooser.addWidget(chargeTime_button)
+    def _menubarWidget(self):
+        fileMenu = self.menuBar().addMenu("File")
+        closeAction = fileMenu.addAction("Close")
+        closeAction.triggered.connect(self.close)
+        closeAction.setShortcut("CTRL+W")
 
-        ## Fit current event
-        fit_button = QtGui.QPushButton()
-        fit_button.clicked.connect(self.performFit)
-        fit_button.setIcon(QtGui.QIcon('assets/bonsai.png'))
-        fit_button.setToolTip('Bonsai!')
-        self.hboxchooser.addWidget(fit_button)
+    def _centralWidget(self):
+        # Tabbed view
+        self.tabWidget = QtGui.QTabWidget()
 
-        ## Put form together
-        formGroupBox.setLayout(formLayout)
-        ## Top bar:
-        self.layout.addWidget(formGroupBox,0,0,1,16)
-        ## EV Info panel
-        #self.pFig = Figure()
-        #self.pAxis = self.pFig.add_subplot(111)
-        #self.figCanvas = FigureCanvas(self.pFig)
-        self.figCanvas = SibylHistogram(self.App, self)
-        #evinfoGroupBox = QtGui.QGroupBox()
-        self.layout.addWidget(self.figCanvas,6,12,3,4)
+        # Event tab
+        eventWidget = SibylTabEvent(self)
+        self.listOfTabs.append(eventWidget)
+        self.tabWidget.addTab(eventWidget, "Event")
 
-        # If we want to pop-out widgets instead of putting them
-        # into a layout, simply use widget.show() i.e.
-        # self.figCanvas.show()
+        # Document tab
+        aboutWidget = SibylTabAbout(self)
+        self.listOfTabs.append(aboutWidget)
+        self.tabWidget.addTab(aboutWidget, "About")
 
-        #layout.addWidget(evinfoGroupBox,6,12,3,4)
-
-        ## Now the 3D graph
-        self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
-        self.plotTracks = gl.GLLinePlotItem(mode='lines', color=(1,0,0,0.1))
-        #self.plotFlatMap = gl.GLScatterPlotItem(pxMode=False, size=300)
-        self.plotFlatMap = SibylWatchmanFlat()
-        self.newEvent()
-        self.glWin = Sibyl3DViewer(self.plot3DView, self.plotTracks, self.App)
-        self.flatMapWindow = Sibyl2DViewer(self.plotFlatMap, self.App)
-        #self.layout.addWidget(self.glWin,1,0,4,1)
-        #self.flatMapWindow.addItem(self.plotFlatMap)
-        self.layout.addWidget(self.flatMapWindow,1,0,8,8)
-        self.layout.addWidget(self.glWin,1,8,5,8)
-
-        # Fix the column and row stretch
-        for r in range(9):
-            self.layout.setRowStretch(r, 1)
-        for c in range(16):
-            self.layout.setColumnStretch(c, 1)
-        mainWidget = QtGui.QWidget()
-        mainWidget.setLayout(self.layout)
-        self.setCentralWidget(mainWidget)
-        self.show()
-
-    def _toolbar_setup(self):
-        self.toolbar = QtGui.QToolBar()
-        # Quit Button
-        quitButton = QtGui.QPushButton("X")
-
-    def performFit(self):
-        print('Bonsai!')
-
-    def toggleColorMode(self):
-        if self.parameters['colorMask'] == 'charge':
-            self.parameters['colorMask'] = 'time'
-        else:
-            self.parameters['colorMask'] = 'charge'
-        self.drawEvent()
+        # Add to center 
+        self.setCentralWidget( self.tabWidget )
 
     def leftEvent(self):
         min_event = 0
@@ -219,7 +174,8 @@ class MainWindow(QtGui.QMainWindow):
         self.readRat()
         if self.args.tracking:
             self.readRatTracking()
-        self.drawEvent()
+        for tab in self.listOfTabs:
+            tab.drawEvent()
 
     def newEvent(self):
         min_event, max_event = 0, int(self.total_events_line.text())
@@ -236,27 +192,21 @@ class MainWindow(QtGui.QMainWindow):
     ## Rat, moveme to rat class
     def beginRat(self):
         self.cobra = snake()
-        self.cobra.openFile(self.fname)
-        self.posArray = np.array(self.cobra.getXYZ()).T
-        self.entries = self.cobra.getEntries()
+        self.cobra.openFile(self.parameters["filename"])
+        self.parameters["posArray"] = np.array(self.cobra.getXYZ()).T
+        self.parameters["entries"] = self.cobra.getEntries()
     
-    # Helper function, root TMap to python dict, this one for strings
-    def _tmap_to_dict(self,tmap):
-        tdict = {}
-        for k in tmap:
-            tdict[str(k)] = str(tmap.GetValue(k))
-        return tdict
-
     def readRat(self):
         event =int(self.event.text())
         self.cobra.getEvent(event)
-        self.CHARGE, self.TIME = self.cobra.getHitInfo()
-        self.plWeights = np.zeros(len(self.CHARGE)) + 100
-        self.plWeights[self.CHARGE>-99] = 300
+        self.parameters["charge"], self.parameters["time"] = self.cobra.getHitInfo()
+        self.parameters["plWeights"] = np.zeros(len(self.parameters["charge"])) + 100
+        self.parameters["plWeights"][self.parameters["charge"]>-99] = 300
 
 
     def readRatTracking(self):
         # Clear last event
+        # Rewrite in c and replace this function
         event = int(self.event.text())
         mc = self.ds.GetEvent(event).GetMC()
         nTracks = mc.GetMCTrackCount()
@@ -308,66 +258,6 @@ class MainWindow(QtGui.QMainWindow):
             self.plotTracks.pos = tarray
             self.plotTracks.color = carray
 
-    def addPMT(self, pmtpos):
-        self.posArray = np.append(self.posArray, np.array([pmtpos]), axis=0)
-
-    def drawEvent(self):
-        self.colorize()
-        ## 3D Viewport
-        if self.plot3DView is None:
-            self.plot3DView = gl.GLScatterPlotItem(pos=self.posArray,
-                    color=self.colorArray, size=self.plWeights, pxMode=False)
-        else:
-            self.plot3DView.pos = self.posArray
-            self.plot3DView.color = self.colorArray
-            self.plot3DView.size = self.plWeights
-            self.plot3DView.update()
-        ## 2D Viewport
-        self.plotFlatMap.setPosition(self.posArray)
-        self.plotFlatMap.setColor(self.colorArray)
-        self.plotFlatMap.setWeights(self.plWeights)
-        self.plotFlatMap.update()
-
-        if self.parameters['colorMask'] == 'charge':
-            variable = self.CHARGE
-        else:
-            variable = self.TIME
-        self.figCanvas.setData(variable)
-
-    def drawColors(self):
-        '''
-        Only update colors, not positions or sizes
-        '''
-        self.colorize()
-        self.plot3DView.color = self.colorArray
-        self.plot3DView.update()
-        self.plotFlatMap.setColor(self.colorArray)
-        self.plotFlatMap.update()
-
-    def colorize(self):
-        # choose color mask, charge for now
-        if self.parameters['colorMask'] == 'charge':
-            variable = self.CHARGE
-        else:
-            variable = self.TIME
-        #variable = self.TIME
-        true_min = 0.0
-        #min_var = max(true_min, min(variable))
-        #max_var = max(variable)
-        ## Override
-        min_var = true_min
-        max_var = self.parameters["histXMax"]
-        if self.args.onlyHits:
-            null_color = [1,1,1,0.0]
-        else:
-            null_color = [1,1,1,0.25]
-        var_range = max_var - min_var
-        varNorm = (variable-min_var)*1/var_range
-        self.colorArray = self.parameters['colorMap'](varNorm)
-        self.colorArray[variable<true_min] = null_color
-        ## Invisible hack
-        if self.args.invisible:
-            self.colorArray *= 0
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -399,9 +289,10 @@ if __name__ == '__main__':
         start_time = time.time()
         def handler():
             eid = int(guit.event.text())
-            if eid>80:
+            if eid>800:
                 timer.stop()
-                print('Frequency:', (eid+1)/(time.time()-start_time) )
+                freq = (eid+1)/(time.time()-start_time)
+                print(f'Frequency: {freq:.2f}')
                 guit.close()
             guit.rightEvent()
         timer = QtCore.QTimer()
