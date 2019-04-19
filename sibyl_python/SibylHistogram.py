@@ -84,8 +84,11 @@ class SibylHistogram(gl.GLViewWidget):
             self.resetMesh()
 
     def resetHist(self):
-        hy, hx = np.histogram(self.data, 
-                    bins=np.linspace(self.xmin,self.xmax/self.zoom_x,self.nbins), 
+        bins = np.linspace(self.xmin, self.xmax/self.zoom_x,self.nbins)
+        hy, hx = np.histogram(
+                    #self.data,
+                    np.clip(self.data, -999, bins[-1]), 
+                    bins=bins,
                     density=False)
         self.hx = hx
         self.hy = hy
