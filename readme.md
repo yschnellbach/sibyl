@@ -18,6 +18,7 @@ Dependencies
 - python-opengl
 - rat-pac (compiled with ROOT-6)
 ### Optional
+- python-markdown -- properly display the readme page in the about tab
 - Plotly -- Useful for a web conversion, not currently implemented.
 - SnakeViz is nice for visualizing cProfile
 
@@ -60,6 +61,7 @@ TODO
 just python-opengl
 
 
-Profile:
+Profile
+-------
 - python -m cProfile -o profile.out sibyl.py data.root
 - snakeviz profile.out

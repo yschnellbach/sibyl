@@ -15,18 +15,15 @@ class SibylTabAbout(SibylTab):
         with open('readme.md') as rr:
             text = rr.read()
         browser = QTextBrowser()
-        #text = "<h1>Hello</h1><h2>World</h2>"
-        # See if markdown is available
         try:
             import markdown as md
-            text = md.markdown(text)
-        except ModuleNotFoundError:
-            pass
+            text = "<head><link rel='stylesheet' type='text/css' href='style.css'></head>"+\
+                    md.markdown(text)
+        except ModuleNotFoundError as e:
+            print(e)
+            text = "<h1>INSTALL python-markdown to render this page properly</h1>" \
+                    + "<p>" + text + "</p>"
         browser.setHtml(text)
-        #self.editor = QPlainTextEdit()
-        #self.editor.setReadOnly(True)
-        #self.editor.setPlainText(text)
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(browser)
-
         self.setLayout(mainLayout)
