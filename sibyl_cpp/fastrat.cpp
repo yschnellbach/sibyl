@@ -2,6 +2,7 @@
 #include "stdio.h"
 
 #include <vector>
+#include <string>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -108,6 +109,58 @@ extern "C"
       pmt_time[pid] = time;
     }
   }
+
+  std::vector<double> xtrack, ytrack, ztrack;
+  std::vector<int> pnames;
+  std::map<std::string, int> pnmap = {
+    {"e-"            , 1},
+    {"gamma"         , 2},
+    {"Cerenkov"      , 3},
+    {"Scintillation" , 4},
+    {"Reemission"    , 4} // from scint.
+  };
+
+  void getTracking()
+  {
+    RAT::DS::MC* mc = ds->GetMC();
+    int nTracks = mc->GetMCTrackCount();
+    // Loop over each track
+    xtrack.clear();
+    ytrack.clear();
+    ztrack.clear();
+    pnames.clear();
+
+    for(int trk=0; trk < nTracks; trk++)
+    {
+      RAT::DS::MCTrack* track = mc->GetMCTrack(trk);
+      std::string name = track->GetParticleName();
+      if( name == "opticalphoton" )
+        name = track->GetMCTrackStep(0)->GetProcess();
+      int nSteps = track->GetMCTrackStepCount();
+      for(int stp=0; stp<nSteps; stp++)
+      {
+        RAT::DS::MCTrackStep* step = track->GetMCTrackStep(stp);
+        TVector3 tv = step->GetEndpoint();
+        if( (stp!=0)&&(stp!=nSteps-1) )
+        {
+          xtrack.push_back( tv.X() );
+          ytrack.push_back( tv.Y() );
+          ztrack.push_back( tv.Z() );
+          pnames.push_back(pnmap[name]);
+        }
+        xtrack.push_back( tv.X() );
+        ytrack.push_back( tv.Y() );
+        ztrack.push_back( tv.Z() );
+        pnames.push_back(pnmap[name]);
+      }
+    }
+  }
+
+  int getTrackCount(){ return xtrack.size(); }
+  double* getTrackX(){ return &xtrack[0]; }
+  double* getTrackY(){ return &ytrack[0]; }
+  double* getTrackZ(){ return &ztrack[0]; }
+  int* getTrackNames(){ return &pnames[0]; }
 
   int getNHit(){ return nhit; }
   int getPMTCount(){ return pmtcount; }

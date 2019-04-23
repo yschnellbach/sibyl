@@ -50,7 +50,7 @@ class Sibyl2DViewer(gl.GLViewWidget):
                 self.mPosition()
             elif ev.button() == 1:
                 x = x - self.width() / 2
-                y = y-self.height() / 2
+                y = y - self.height() / 2
         self._prev_zoom_pos = None
         self._prev_pan_pos = None
 

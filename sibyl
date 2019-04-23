@@ -72,6 +72,7 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["filename"] = self.args.ratfile
         self.parameters["invisible"] = self.args.invisible
         self.parameters["onlyHits"] = self.args.onlyHits
+        self.parameters["trackingEnabled"] = self.args.tracking
         if self.App is None:
             if app is not None:
                 self.App = app
@@ -100,7 +101,7 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["colorMask"] = 'charge'
         self.parameters["histXMax"] = 1
         self.parameters["histYMax"] = 1
-        self.parameters["colorMap"] = cm.cividis
+        self.parameters["colorMap"] = cm.Spectral
         self.parameters["entries"] = 0
         self.parameters["charge"] = np.array([])
         self.parameters["time"] = np.array([])
@@ -203,13 +204,9 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["plWeights"] = np.zeros(len(self.parameters["charge"])) + 100
         self.parameters["plWeights"][self.parameters["charge"]>-99] = 300
 
-
     def readRatTracking(self):
-        # Clear last event
-        # Rewrite in c and replace this function
-        event = int(self.event.text())
-        mc = self.ds.GetEvent(event).GetMC()
-        nTracks = mc.GetMCTrackCount()
+        self.cobra.getTracking()
+        x, y, z, n = self.cobra.getTrackSteps()
         # Colors based on: ID and Process if optical
         # Yellow: electron
         clr_electron = (1, 1, 0, 1.0)
@@ -220,44 +217,15 @@ class MainWindow(QtGui.QMainWindow):
         # Scintillation: Pink
         clr_scint = (1, 0, 0.5, 0.1)
         clr_reim = (0, 0, 1, 0.1)
-        clr_dict = {'e-':clr_electron,
-                    'gamma':clr_gamma,
-                    'Cerenkov':clr_cerenkov,
-                    'Scintillation':clr_scint,
-                    'Reemission':clr_scint}
         clr_other = (0.7, 0.7, 0.8, 0.1)
-        clr_list = []
-        nlist = []
-        for trk in range(nTracks):
-            track = mc.GetMCTrack(trk)
-            name = track.GetParticleName()
-            if name == 'opticalphoton':
-                name = track.GetMCTrackStep(0).GetProcess()
-            nSteps = track.GetMCTrackStepCount()
-            # A path consists of steps-1 segments:
-            path = []
-            for stp in range(nSteps):
-                step = track.GetMCTrackStep(stp)
-                tv = step.GetEndpoint()
-                x, y, z = tv.X(), tv.Y(), tv.Z()
-                path.append( (x, y, z) )
-            x, y, z = np.array(path).T
-            xx = np.roll(np.repeat(x, 2), -1)[:-2]
-            yy = np.roll(np.repeat(y, 2), -1)[:-2]
-            zz = np.roll(np.repeat(z, 2), -1)[:-2]
-            jj = np.array([xx, yy, zz]).T
-            if name in clr_dict:
-                color_choice = clr_dict[name]
-            else:
-                color_choice = clr_other
-            clr_list.append( np.array([color_choice for i in range(len(jj))]) )
-            nlist.append(jj)
-        if len(nlist) > 0:
-            tarray = np.concatenate(nlist)
-            carray = np.concatenate(clr_list)
-            self.plotTracks.pos = tarray
-            self.plotTracks.color = carray
+        clr_dict = {0:clr_other,
+                    1:clr_electron,
+                    2:clr_gamma,
+                    3:clr_cerenkov,
+                    4:clr_scint}
 
+        self.parameters["trackPosition"] = np.array([x, y, z]).T
+        self.parameters["trackColors"] = np.array([ clr_dict[i] for i in n ])
 
 def get_args():
     parser = argparse.ArgumentParser()

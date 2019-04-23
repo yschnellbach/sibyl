@@ -96,6 +96,12 @@ class SibylTabEvent(SibylTab):
             variable = self.parameters["time"]
         self.figCanvas.setData(variable)
 
+        ## Tracking
+        if self.parameters["trackingEnabled"]:
+            self.plotTracks.pos = self.parameters["trackPosition"]
+            self.plotTracks.color = self.parameters["trackColors"]
+            self.plotTracks.update()
+
     def drawColors(self):
         '''
         Only update colors, not positions or sizes

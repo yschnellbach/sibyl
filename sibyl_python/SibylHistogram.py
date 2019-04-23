@@ -20,6 +20,7 @@ class SibylHistogram(gl.GLViewWidget):
     zoom_y = 1
     zoom_x = 1
     autoMode = True
+    logy = False
     def __init__(self, app=None, parent=None):
         if self.App is None:
             if app is not None:
@@ -58,9 +59,20 @@ class SibylHistogram(gl.GLViewWidget):
         if self.autoMode:
             autoModeAction.setChecked(True)
         autoModeAction.triggered.connect(self._toggle_auto)
+        # Log-scale-y
+        logyAction = self.menu.addAction("Log-y")
+        logyAction.setCheckable(True)
+        if self.logy:
+            logyAction.setChecked(True)
+        logyAction.triggered.connect(self._toggle_logy)
 
     def _toggle_auto(self):
         self.autoMode = not self.autoMode
+
+    def _toggle_logy(self):
+        self.logy = not self.logy
+        self.resetHist()
+        self.resetMesh()
 
     def _autoset(self):
         # Set best x and y (x to edge, y at 90%)
@@ -92,6 +104,10 @@ class SibylHistogram(gl.GLViewWidget):
                     density=False)
         self.hx = hx
         self.hy = hy
+        if self.logy:
+            self.hy = np.log10(self.hy)
+            self.hy[self.hy==-np.inf] = 0
+            #self.hy += np.min(self.hy)
 
     def resetMesh(self):
         vtx, colrs, faces = self._verts(self.hx*self.zoom_x, self.hy*self.zoom_y)
@@ -188,7 +204,18 @@ class SibylHistogram(gl.GLViewWidget):
 
 
     def mousePressEvent(self, event):
-        pass
+        super(SibylHistogram,self).mousePressEvent(event)
+        if event.button() == 1:
+            self._mouseDown = True
+
+    def mouseReleaseEvent(self, event):
+        super(SibylHistogram,self).mouseReleaseEvent(event)
+        if event.button() == 1:
+            self._mouseDown = False
+            try:
+                del(self._prev_pan_pos)
+            except AttributeError:
+                pass
 
     def mouseMoveEvent(self, event):
         mousePos = event.pos()
@@ -198,6 +225,17 @@ class SibylHistogram(gl.GLViewWidget):
         mx /= self.zoom_x
         self.txt = '(%0.2f, %0.2f)'%(mx, my)
         self.update()
+        if hasattr(self, '_mouseDown') and self._mouseDown:
+            if not hasattr(self, '_prev_pan_pos') or not self._prev_pan_pos:
+                self._prev_pan_pos = x, y
+                return
+            dx = x - self._prev_pan_pos[0]
+            dy = y - self._prev_pan_pos[1]
+            self._prev_pan_pos = x, y
+            self.zoom_x *= 1.003**dx
+            self.zoom_y *= 0.997**dy
+            self.resetHist()
+            self.resetMesh()
 
     def leaveEvent(self, event):
         super(SibylHistogram,self).leaveEvent(event)

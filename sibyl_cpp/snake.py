@@ -7,6 +7,7 @@ c_double = ct.c_double
 c_void_p = ct.c_void_p
 c_char_p = ct.c_char_p
 c_double_pointer = ct.POINTER(c_double)
+c_int_pointer = ct.POINTER(c_int)
 libname = os.path.join( os.path.dirname( os.path.abspath(__file__) ), 'libfastrat.so' )
 
 class snake:
@@ -57,6 +58,25 @@ class snake:
         self._getTime.restype = c_double_pointer
         self._getTime.argstypes = []
 
+        self._getTracking = self.lib.getTracking
+        self._getTracking.restype = c_void_p
+        self._getTracking.argstypes = []
+        self._getTrackCount = self.lib.getTrackCount
+        self._getTrackCount.restype = c_int
+        self._getTrackCount.argstypes = []
+        self._getTrackX = self.lib.getTrackX
+        self._getTrackX.restype = c_double_pointer
+        self._getTrackX.argstypes = []
+        self._getTrackY = self.lib.getTrackY
+        self._getTrackY.restype = c_double_pointer
+        self._getTrackY.argstypes = []
+        self._getTrackZ = self.lib.getTrackZ
+        self._getTrackZ.restype = c_double_pointer
+        self._getTrackZ.argstypes = []
+        self._getTrackNames = self.lib.getTrackNames
+        self._getTrackNames.restype = c_int_pointer
+        self._getTrackNames.argstypes = []
+
     def openFile(self, fname):
         print(fname)
         self._openFile( fname.encode() )
@@ -92,6 +112,22 @@ class snake:
         newarr = np.fromiter(areturn, dtype=np.float64, count=len(arr))
         self._freeSquare()
         return newarr
+
+    ## Tracking information
+    def getTracking(self):
+        self._getTracking()
+
+    def getTrackSteps(self):
+        tsteps = self._getTrackCount()
+        x_ret = self._getTrackX()
+        x_arr = np.fromiter(x_ret, dtype=np.float64, count=tsteps)
+        y_ret = self._getTrackY()
+        y_arr = np.fromiter(y_ret, dtype=np.float64, count=tsteps)
+        z_ret = self._getTrackZ()
+        z_arr = np.fromiter(z_ret, dtype=np.float64, count=tsteps)
+        n_ret = self._getTrackNames()
+        n_arr = np.fromiter(n_ret, dtype=np.int64, count=tsteps)
+        return x_arr, y_arr, z_arr, n_arr
 
 if __name__ == '__main__':
     a = np.random.rand(10)
