@@ -79,6 +79,9 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 self.App = QtGui.QApplication([])
         super(MainWindow,self).__init__()
+        self.resize(1600, 900)
+        self.setWindowTitle("Sibyl")
+        #self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.trayIcon = SibylTrayIcon()
         self.trayIcon.show()
         self.beginRat()
@@ -139,6 +142,10 @@ class MainWindow(QtGui.QMainWindow):
         closeAction = fileMenu.addAction("Close")
         closeAction.triggered.connect(self.close)
         closeAction.setShortcut("CTRL+W")
+
+    def close(self):
+        super(MainWindow,self).close()
+        sys.exit()
 
     def _centralWidget(self):
         # Tabbed view
@@ -250,7 +257,7 @@ if __name__ == '__main__':
         if args.debug:
             print(*argmnt)
     app = QtGui.QApplication([])
-    guit = MainWindow(args)
+    guit = MainWindow(args,app)
 
     # This loops through events, potentially a way to update a stream
     if args.stream:

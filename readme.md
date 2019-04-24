@@ -34,26 +34,24 @@ TODO
   - [ ] Make geometry independent
   - [ ] Include geometry files
   - [ ] Module base class
-- [ ] Colors
+- [x] Colors
   - [x] Make color choice global.
-  - [ ] Choose from MPL code in context menu
-- [ ] Context menus
-  - [ ] Test different types for each module
+  - [x] Choose from MPL code in context menu
 - [ ] Split module view
-- [ ] File menu: Quit button.
-  - [ ] Quit button
+- [ ] File menu
+  - [x] Quit button
   - [ ] Load data file
 - [ ] Save state as json
-- [ ] Datastream simulator & datastream reading
-  - [ ] Define a speed requirement. Maybe 4-10Hz at full occupancy.
+- [x] Datastream simulator & datastream reading
+  - [x] Define a speed requirement. Maybe 4-10Hz at full occupancy.
 - [ ] Geometry helper
   - [ ] Helps the flatmap view know where to make PMT cuts
   - [ ] Could be used to draw in Geant4 objects.
 - [ ] Histrogram
   - [ ] Axis labels
-  - [ ] Swap colors
-  - [ ] Control global colors
-  - [ ] Axis ticks
+  - [x] Swap colors
+  - [x] Control global colors
+  - [x] Axis ticks
   - [ ] Axis tick numbers
 - [ ] Option to run as single window widgets.
 

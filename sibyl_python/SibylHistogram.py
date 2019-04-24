@@ -65,6 +65,9 @@ class SibylHistogram(gl.GLViewWidget):
         if self.logy:
             logyAction.setChecked(True)
         logyAction.triggered.connect(self._toggle_logy)
+        # Color picker
+        colorAction = self.menu.addAction("Colormap")
+        colorAction.triggered.connect(self._selectColor)
 
     def _toggle_auto(self):
         self.autoMode = not self.autoMode
@@ -83,6 +86,9 @@ class SibylHistogram(gl.GLViewWidget):
         self.resetHist()
         self.zoom_y = y/np.max(self.hy)
         self.resetMesh()
+
+    def _selectColor(self):
+        self.selector = SibylColorSelector(self.App, self)
 
     def update(self):
         super(SibylHistogram,self).update()
@@ -202,7 +208,6 @@ class SibylHistogram(gl.GLViewWidget):
         if event.button() == 1:
             self._autoset()
 
-
     def mousePressEvent(self, event):
         super(SibylHistogram,self).mousePressEvent(event)
         if event.button() == 1:
@@ -278,15 +283,95 @@ class SibylHistogram(gl.GLViewWidget):
     def dot(self, v1, v2):
         return QVector3D.dotProduct(v1, v2)
 
+class SibylColorSelector(QScrollArea):
+    App = None
+    cmaps = [('Perceptually Uniform Sequential', [
+                'viridis', 'plasma', 'inferno', 'magma', 'cividis']),
+             ('Sequential', [
+                'Greys', 'Purples', 'Blues', 'Greens', 'Oranges', 'Reds',
+                'YlOrBr', 'YlOrRd', 'OrRd', 'PuRd', 'RdPu', 'BuPu',
+                'GnBu', 'PuBu', 'YlGnBu', 'PuBuGn', 'BuGn', 'YlGn']),
+             ('Sequential (2)', [
+                'binary', 'gist_yarg', 'gist_gray', 'gray', 'bone', 'pink',
+                'spring', 'summer', 'autumn', 'winter', 'cool', 'Wistia',
+                'hot', 'afmhot', 'gist_heat', 'copper']),
+             ('Diverging', [
+                'PiYG', 'PRGn', 'BrBG', 'PuOr', 'RdGy', 'RdBu',
+                'RdYlBu', 'RdYlGn', 'Spectral', 'coolwarm', 'bwr', 'seismic']),
+             ('Cyclic', ['twilight', 'twilight_shifted', 'hsv']),
+             ('Qualitative', [
+                'Pastel1', 'Pastel2', 'Paired', 'Accent',
+                'Dark2', 'Set1', 'Set2', 'Set3',
+                'tab10', 'tab20', 'tab20b', 'tab20c']),
+             ('Miscellaneous', [
+                'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
+                'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg',
+                'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar'])]
+    #cmaps = [('hi', ['viridis', 'jet'])]
+    def __init__(self, app=None, parent=None):
+        super(SibylColorSelector,self).__init__()
+        if self.App is None:
+            if app is not None:
+                self.App = app
+            else:
+                self.App = QtGui.QApplication([])
+        self.parent = parent
+        self.setGeometry()
+        self.addButtons()
+        self.show()
 
+    def setGeometry(self):
+        self.setMinimumSize(300, 800)
+        self.setMaximumSize(300, 800)
+        k = QApplication.desktop()
+        w = k.screenGeometry().width()
+        h = k.screenGeometry().height()
+        self.move( (w-self.width())*(0.85), (h-self.height())/2)
+        self.setWindowTitle("Color Selector")
 
-if __name__ == '__main__':
-    import sys
-    app = QtGui.QApplication([])
-    w = SibylHistogram()
-    w.show()
-    
-    data = np.random.normal(0, 1, 100000)
-    w.setData(data)
-    if (sys.flags.interactive != 1) or not hasattr(QtCore, 'PYQT_VERSION'):
-        QtGui.QApplication.instance().exec_()
+    def addButtons(self):
+        scrollWidget = QWidget()
+        scrollLayout = QFormLayout()
+        scrollWidget.setLayout(scrollLayout)
+        self.setWidget(scrollWidget)
+        self.setWidgetResizable(True)
+        # Header
+        title = QLabel("Color Palette Selection")
+        title.setAlignment(Qt.AlignCenter)
+        title.setFont(QFont("Arial", 14, QFont.Bold))
+        scrollLayout.addRow(title)
+
+        # Button
+        for name,maplist in self.cmaps:
+            tlabel = QLabel(name)
+            tlabel.setAlignment(Qt.AlignCenter)
+            tlabel.setFont(QFont("Arial", 12))
+            scrollLayout.addRow(tlabel)
+            for c in maplist:
+                mp = cm.get_cmap(c)
+                clr_button = QPushButton()
+                pos = np.linspace(0,1,100)
+                clr = mp(pos, bytes=True)
+                color = [QColor(*(x)).name() for x in clr]
+                stops = [',stop:%0.2f %s'%(x,y) for x,y in zip(pos,color)]
+                styleString = 'QPushButton {background-color:' + \
+                        'qlineargradient(x1:0,y1:0,x2:1,y2:0' + \
+                        '%s);}' % ''.join(stops)
+                clr_button.setStyleSheet(styleString)
+                clr_button.setFixedHeight(20)
+                clr_button.clicked.connect(self.setColor(mp) )
+                #clr_button.setPalette(pal)
+                #clr_button.update()
+                #clr_button.setAutoFillBackground(True)
+                ## Test gradient
+                scrollLayout.addRow(clr_button)
+
+    def setColor(self, color):
+        def sCol():
+            self.parent._parent.parameters['colorMap'] = color
+            self.parent.resetMesh()
+        return sCol
+
+    def keyPressEvent(self, ev):
+        if ( ev.key() == ord('W') ) and ( ev.modifiers() & Qt.ControlModifier ):
+            self.close()
