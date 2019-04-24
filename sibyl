@@ -69,10 +69,6 @@ class MainWindow(QtGui.QMainWindow):
         self.args = args
         self._default_parameters()
         # Icon
-        self.parameters["filename"] = self.args.ratfile
-        self.parameters["invisible"] = self.args.invisible
-        self.parameters["onlyHits"] = self.args.onlyHits
-        self.parameters["trackingEnabled"] = self.args.tracking
         if self.App is None:
             if app is not None:
                 self.App = app
@@ -108,6 +104,13 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["entries"] = 0
         self.parameters["charge"] = np.array([])
         self.parameters["time"] = np.array([])
+        self.parameters["filename"] = self.args.ratfile
+        self.parameters["invisible"] = self.args.invisible
+        self.parameters["onlyHits"] = self.args.onlyHits
+        self.parameters["trackingEnabled"] = self.args.tracking
+        # Load the default config file
+        self.state = SibylState()
+        self.state.loadState(self.parameters)
 
     def _toolbarWidget(self):
         bar = self.addToolBar("BARR")
@@ -144,6 +147,7 @@ class MainWindow(QtGui.QMainWindow):
         closeAction.setShortcut("CTRL+W")
 
     def close(self):
+        self.state.saveState()
         super(MainWindow,self).close()
         sys.exit()
 

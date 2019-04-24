@@ -81,7 +81,7 @@ class SibylHistogram(gl.GLViewWidget):
         # Set best x and y (x to edge, y at 90%)
         x, y = self.screenToWorld( (0, self.height()*0.1) )
         end_x = np.max(self.data)
-        self.zoom_x = self.xmax/end_x
+        self.zoom_x = self.xmax/end_x if end_x > 0 else 1
         self.zoom_x = np.max([0, self.zoom_x])
         self.resetHist()
         self.zoom_y = y/np.max(self.hy)
