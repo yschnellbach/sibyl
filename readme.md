@@ -9,6 +9,11 @@ Sibyl is a simple pythonic event viewer that will interact with rat-pac to
 provide a 2d and 3d event display. The display itself is meant to look modern
 and be cross-platform, with the only strong dependency being on rat-pac.
 
+Install
+-------
+Currently the only compiled component of Sibyl is the root data structure reader
+in sibyl_cpp. To install simply run make from the base directory or sibyl_cpp.
+
 Dependencies
 ------------
 ### Required
