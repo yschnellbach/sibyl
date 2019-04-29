@@ -228,7 +228,6 @@ class MainWindow(QtGui.QMainWindow):
         clr_gamma = (0, 1, 0, 1.0)
         # Cherenkov: Blue
         cb = self.parameters["cherenkovBrightness"]
-        print('cb', cb)
         clr_cherenkov = (0, 0.5, 1.0, cb)
         # Scintillation: Pink
         clr_scint = (1, 0, 0.5, 0.1)
