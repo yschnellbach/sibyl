@@ -104,13 +104,15 @@ class MainWindow(QtGui.QMainWindow):
         self.parameters["entries"] = 0
         self.parameters["charge"] = np.array([])
         self.parameters["time"] = np.array([])
+        # Load the default config file
+        self.state = SibylState()
+        self.state.loadState(self.parameters)
+        # parameter override
         self.parameters["filename"] = self.args.ratfile
         self.parameters["invisible"] = self.args.invisible
         self.parameters["onlyHits"] = self.args.onlyHits
         self.parameters["trackingEnabled"] = self.args.tracking
-        # Load the default config file
-        self.state = SibylState()
-        self.state.loadState(self.parameters)
+        self.parameters["cherenkovBrightness"] = self.args.cherenkov_brightness
 
     def _toolbarWidget(self):
         bar = self.addToolBar("BARR")
@@ -221,19 +223,23 @@ class MainWindow(QtGui.QMainWindow):
         # Colors based on: ID and Process if optical
         # Yellow: electron
         clr_electron = (1, 1, 0, 1.0)
+        clr_muon = (1, 0, 0, 1.0)
         # Green: Gamma
         clr_gamma = (0, 1, 0, 1.0)
         # Cherenkov: Blue
-        clr_cerenkov = (0, 0.5, 1.0, 0.1)
+        cb = self.parameters["cherenkovBrightness"]
+        print('cb', cb)
+        clr_cherenkov = (0, 0.5, 1.0, cb)
         # Scintillation: Pink
         clr_scint = (1, 0, 0.5, 0.1)
         clr_reim = (0, 0, 1, 0.1)
         clr_other = (0.7, 0.7, 0.8, 0.1)
         clr_dict = {0:clr_other,
-                    1:clr_electron,
-                    2:clr_gamma,
-                    3:clr_cerenkov,
-                    4:clr_scint}
+                    1:clr_cherenkov,
+                    2:clr_scint,
+                    3:clr_electron,
+                    4:clr_gamma,
+                    5:clr_muon}
 
         self.parameters["trackPosition"] = np.array([x, y, z]).T
         self.parameters["trackColors"] = np.array([ clr_dict[i] for i in n ])
@@ -246,6 +252,8 @@ def get_args():
     parser.add_argument('--tracking', action='store_true',
             help='ROOT files only. If storeTracking was used during simulation,\
             then the particle tracks will be drawn.')
+    parser.add_argument('--cherenkov_brightness', type=float, default=0.10,
+            help='Scale cherenkov when showing tracks')
     parser.add_argument('--invisible', action='store_true',
             help='This is a hack, remove eventually')
     parser.add_argument('--onlyHits', action='store_true',

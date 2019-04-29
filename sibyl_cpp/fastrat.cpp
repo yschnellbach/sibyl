@@ -113,11 +113,13 @@ extern "C"
   std::vector<double> xtrack, ytrack, ztrack;
   std::vector<int> pnames;
   std::map<std::string, int> pnmap = {
-    {"e-"            , 1},
-    {"gamma"         , 2},
-    {"Cerenkov"      , 3},
-    {"Scintillation" , 4},
-    {"Reemission"    , 4} // from scint.
+    {"Cerenkov"      , 1},
+    {"Scintillation" , 2},
+    {"Reemission"    , 2}, // from scint.
+    {"e-"            , 3},
+    {"gamma"         , 4},
+    {"mu-"         , 5},
+    {"mu+"         , 5}
   };
 
   void getTracking()

@@ -350,6 +350,7 @@ class SibylColorSelector(QScrollArea):
             for c in maplist:
                 mp = cm.get_cmap(c)
                 clr_button = QPushButton()
+                clr_button.setToolTip(c)
                 pos = np.linspace(0,1,100)
                 clr = mp(pos, bytes=True)
                 color = [QColor(*(x)).name() for x in clr]
