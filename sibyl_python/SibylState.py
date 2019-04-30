@@ -6,7 +6,10 @@ class SibylState:
     config files and exclude particular parameters
     '''
     def __init__(self, state=None):
-        self.state = state
+        if state is None:
+            self.state = {}
+        else:
+            self.state = state
         self.createBlacklist()
 
     def createBlacklist(self):
