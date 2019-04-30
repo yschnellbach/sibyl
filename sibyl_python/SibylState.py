@@ -6,7 +6,10 @@ class SibylState:
     config files and exclude particular parameters
     '''
     def __init__(self, state=None):
-        self.state = state
+        if state is None:
+            self.state = {}
+        else:
+            self.state = state
         self.createBlacklist()
 
     def createBlacklist(self):
@@ -28,9 +31,12 @@ class SibylState:
             pickle.dump(cleanState, outfile)
 
     def loadState(self, realState, filename='.default'):
-        with open(filename, 'rb') as infile:
-            copyState = pickle.load(infile)
-        realState.update(copyState)
-        self.state = realState
+        try:
+            with open(filename, 'rb') as infile:
+                copyState = pickle.load(infile)
+            realState.update(copyState)
+            self.state = realState
+        except FileNotFoundError:
+            pass
 
 
