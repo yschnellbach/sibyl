@@ -28,9 +28,12 @@ class SibylState:
             pickle.dump(cleanState, outfile)
 
     def loadState(self, realState, filename='.default'):
-        with open(filename, 'rb') as infile:
-            copyState = pickle.load(infile)
-        realState.update(copyState)
-        self.state = realState
+        try:
+            with open(filename, 'rb') as infile:
+                copyState = pickle.load(infile)
+            realState.update(copyState)
+            self.state = realState
+        except FileNotFoundError:
+            pass
 
 
