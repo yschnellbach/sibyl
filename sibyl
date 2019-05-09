@@ -151,7 +151,7 @@ class MainWindow(QtGui.QMainWindow):
     def close(self):
         self.state.saveState()
         super(MainWindow,self).close()
-        sys.exit()
+        #sys.exit()
 
     def _centralWidget(self):
         # Tabbed view
