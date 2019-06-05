@@ -172,7 +172,14 @@ class SibylHistogram(gl.GLViewWidget):
         margin = 11
         padding = 6
         self.qglColor(Qt.white)
-        self.renderText(0.8*self.width(), 0.1*self.height(), self.txt)
+        cmask = (self._parent.parameters['colorMask']).capitalize()
+        fsize = int(self.height()/14.0)
+        font = QFont("Times", fsize, QFont.Bold)
+        wstart = self.width() - fsize*8
+        self.renderText(wstart, 0.1*self.height(), 
+                cmask, font=font)
+        self.renderText(wstart, 0.2*self.height(), 
+                self.txt, font=font)
 
     '''
     Interactive events: mouse, keys, wheel, resize

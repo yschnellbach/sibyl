@@ -2,6 +2,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from .SibylTab import SibylTab
+import os.path as path
 
 class SibylTabAbout(SibylTab):
     '''
@@ -12,7 +13,9 @@ class SibylTabAbout(SibylTab):
         self.buildWidget()
 
     def buildWidget(self):
-        with open('readme.md') as rr:
+        filename = path.join( path.dirname( path.abspath(__file__) ),
+                '../readme.md' )
+        with open(filename) as rr:
             text = rr.read()
         browser = QTextBrowser()
         try:

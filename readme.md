@@ -29,26 +29,41 @@ Dependencies
 
 TODO
 ----
+- [ ] Icon/logo update
+- [ ] MC View
+  - [ ] Display macro TObjString as text file
+  - [ ] Primary particles and energy
+  - [ ] Primary Vertex and direction
+- [ ] Main screen info panel
+  - [ ] NHits
+  - [ ] Run ID
+  - [ ] GTID
+  - [ ] Fit Vertex and Direction
+  - [ ] Fit energy (n9 and conversion?)
+  - [ ] Selection criteria
+- [ ] Project 3D to unit sphere (fit vertex or 0,0,0 if none)
+- [ ] Tab selector
+  - [ ] Slow controls
+  - [ ] DAQ
+  - [ ] Crate View
+    - [ ] Crate Rainbow
 - [ ] Setup bonsai library for just-in-time fitting.
   - [ ] libBonsai.so
   - [ ] Bonsai in python
   - [ ] Fit button (print to screen)
   - [ ] Fit, print to QT textdocument
-  - [ ] Draw cherenkov ring
+  - [ ] Draw cherenkov ring (3D)
+  - [ ] Draw cherenkov ring (2D)
 - [ ] Factorize the code
   - [ ] Make geometry independent
   - [ ] Include geometry files
   - [ ] Module base class
-- [x] Colors
-  - [x] Make color choice global.
-  - [x] Choose from MPL code in context menu
+- [ ] Draw geant4 solids from .geo file
 - [ ] Split module view
 - [ ] File menu
   - [x] Quit button
   - [ ] Load data file
 - [ ] Save state as json
-- [x] Datastream simulator & datastream reading
-  - [x] Define a speed requirement. Maybe 4-10Hz at full occupancy.
 - [ ] Geometry helper
   - [ ] Helps the flatmap view know where to make PMT cuts
   - [ ] Could be used to draw in Geant4 objects.
@@ -58,7 +73,14 @@ TODO
   - [x] Control global colors
   - [x] Axis ticks
   - [ ] Axis tick numbers
+  - [ ] Fix grid
 - [ ] Option to run as single window widgets.
+- [ ] Improve 3D controls (fly/fps mode)
+- [ ] Improve 2D projection
+  - [ ] Hover over PMTs to get pmtid
+  - [ ] Info in corners of panel
+  - [ ] Zoom / Pan at mouse location
+- [ ] Options / settings tab (or context menu)
 
 - [ ] Determine if I can drop the pyqtgraph dependency in favor of
 just python-opengl
