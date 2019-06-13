@@ -314,7 +314,6 @@ class SibylColorSelector(QScrollArea):
                 'flag', 'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
                 'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg',
                 'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar'])]
-    #cmaps = [('hi', ['viridis', 'jet'])]
     def __init__(self, app=None, parent=None):
         super(SibylColorSelector,self).__init__()
         if self.App is None:
@@ -350,29 +349,32 @@ class SibylColorSelector(QScrollArea):
 
         # Button
         for name,maplist in self.cmaps:
-            tlabel = QLabel(name)
-            tlabel.setAlignment(Qt.AlignCenter)
-            tlabel.setFont(QFont("Arial", 12))
-            scrollLayout.addRow(tlabel)
-            for c in maplist:
-                mp = cm.get_cmap(c)
-                clr_button = QPushButton()
-                clr_button.setToolTip(c)
-                pos = np.linspace(0,1,100)
-                clr = mp(pos, bytes=True)
-                color = [QColor(*(x)).name() for x in clr]
-                stops = [',stop:%0.2f %s'%(x,y) for x,y in zip(pos,color)]
-                styleString = 'QPushButton {background-color:' + \
-                        'qlineargradient(x1:0,y1:0,x2:1,y2:0' + \
-                        '%s);}' % ''.join(stops)
-                clr_button.setStyleSheet(styleString)
-                clr_button.setFixedHeight(20)
-                clr_button.clicked.connect(self.setColor(mp) )
-                #clr_button.setPalette(pal)
-                #clr_button.update()
-                #clr_button.setAutoFillBackground(True)
-                ## Test gradient
-                scrollLayout.addRow(clr_button)
+            try:
+                tlabel = QLabel(name)
+                tlabel.setAlignment(Qt.AlignCenter)
+                tlabel.setFont(QFont("Arial", 12))
+                scrollLayout.addRow(tlabel)
+                for c in maplist:
+                    mp = cm.get_cmap(c)
+                    clr_button = QPushButton()
+                    clr_button.setToolTip(c)
+                    pos = np.linspace(0,1,100)
+                    clr = mp(pos, bytes=True)
+                    color = [QColor(*(x)).name() for x in clr]
+                    stops = [',stop:%0.2f %s'%(x,y) for x,y in zip(pos,color)]
+                    styleString = 'QPushButton {background-color:' + \
+                            'qlineargradient(x1:0,y1:0,x2:1,y2:0' + \
+                            '%s);}' % ''.join(stops)
+                    clr_button.setStyleSheet(styleString)
+                    clr_button.setFixedHeight(20)
+                    clr_button.clicked.connect(self.setColor(mp) )
+                    #clr_button.setPalette(pal)
+                    #clr_button.update()
+                    #clr_button.setAutoFillBackground(True)
+                    ## Test gradient
+                    scrollLayout.addRow(clr_button)
+            except ValueError:
+                pass
 
     def setColor(self, color):
         def sCol():
