@@ -39,13 +39,17 @@ class SibylHistogram(gl.GLViewWidget):
         self.update()
 
     # Fix for "high dpi":
-    def width(self):
+    def width(self, fixed=False):
         trueWidth = super(SibylHistogram,self).width()
+        if fixed:
+            return trueWidth
         pixRatio = super(SibylHistogram,self).devicePixelRatio()
         return trueWidth * pixRatio
 
     def height(self):
         trueHeight = super(SibylHistogram,self).height()
+        if fixed:
+            return trueHeight
         pixRatio = super(SibylHistogram,self).devicePixelRatio()
         return trueHeight * pixRatio
 
@@ -186,10 +190,10 @@ class SibylHistogram(gl.GLViewWidget):
         cmask = (self._parent.parameters['colorMask']).capitalize()
         fsize = int(self.height()/14.0)
         font = QFont("Times", fsize, QFont.Bold)
-        wstart = self.width() - fsize*8
-        self.renderText(wstart, 0.1*self.height(), 
+        wstart = self.width(fixed=True) - fsize*8
+        self.renderText(wstart, 0.1*self.height(fixed=True),
                 cmask, font=font)
-        self.renderText(wstart, 0.2*self.height(), 
+        self.renderText(wstart, 0.2*self.height(fixed=True), 
                 self.txt, font=font)
 
     '''
