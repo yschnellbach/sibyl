@@ -38,6 +38,17 @@ class SibylHistogram(gl.GLViewWidget):
         self.addItem(self.histMesh)
         self.update()
 
+    # Fix for "high dpi":
+    def width(self):
+        trueWidth = super(SibylHistogram,self).width()
+        pixRatio = super(SibylHistogram,self).devicePixelRatio()
+        return trueWidth * pixRatio
+
+    def height(self):
+        trueHeight = super(SibylHistogram,self).height()
+        pixRatio = super(SibylHistogram,self).devicePixelRatio()
+        return trueHeight * pixRatio
+
     def _axes(self):
         self.ax = gl.GLGridItem()
         self.ax.setSize(5.5,10,1)

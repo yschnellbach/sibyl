@@ -23,6 +23,17 @@ class Sibyl3DViewer(gl.GLViewWidget):
         self._init_camera()
         self.update()
 
+    # Fix for "high dpi":
+    def width(self):
+        trueWidth = super(Sibyl3DViewer,self).width()
+        pixRatio = super(Sibyl3DViewer,self).devicePixelRatio()
+        return trueWidth * pixRatio
+
+    def height(self):
+        trueHeight = super(Sibyl3DViewer,self).height()
+        pixRatio = super(Sibyl3DViewer,self).devicePixelRatio()
+        return trueHeight * pixRatio
+
     def _init_camera(self):
         # init camera
         self.opts['center'] = QtGui.QVector3D(0, 0, 0)

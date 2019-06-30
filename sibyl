@@ -268,6 +268,10 @@ if __name__ == '__main__':
         if args.debug:
             print(*argmnt)
     app = QtGui.QApplication([])
+    print(QtGui.QStyleFactory.keys())
+    app.setStyle(QtGui.QStyleFactory.create('Fusion'))
+    #with open('Aqua.qss') as sheet:
+    #    app.setStyleSheet(sheet.read())
     guit = MainWindow(args,app)
 
     # This loops through events, potentially a way to update a stream

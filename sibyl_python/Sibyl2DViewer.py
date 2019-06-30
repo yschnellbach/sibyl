@@ -19,6 +19,17 @@ class Sibyl2DViewer(gl.GLViewWidget):
         self._downpos = []
         self._init_camera()
 
+    # Fix for "high dpi":
+    def width(self):
+        trueWidth = super(Sibyl2DViewer,self).width()
+        pixRatio = super(Sibyl2DViewer,self).devicePixelRatio()
+        return trueWidth * pixRatio
+
+    def height(self):
+        trueHeight = super(Sibyl2DViewer,self).height()
+        pixRatio = super(Sibyl2DViewer,self).devicePixelRatio()
+        return trueHeight * pixRatio
+
     def _init_camera(self):
         # init camera -- this is pseudo 2D
         self.opts['center'] = QtGui.QVector3D(0, 0, 0)
