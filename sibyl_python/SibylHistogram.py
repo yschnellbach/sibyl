@@ -46,7 +46,7 @@ class SibylHistogram(gl.GLViewWidget):
         pixRatio = super(SibylHistogram,self).devicePixelRatio()
         return trueWidth * pixRatio
 
-    def height(self):
+    def height(self, fixed=False):
         trueHeight = super(SibylHistogram,self).height()
         if fixed:
             return trueHeight
@@ -188,7 +188,7 @@ class SibylHistogram(gl.GLViewWidget):
         padding = 6
         self.qglColor(Qt.white)
         cmask = (self._parent.parameters['colorMask']).capitalize()
-        fsize = int(self.height()/14.0)
+        fsize = int(self.height(fixed=True)/14.0)
         font = QFont("Times", fsize, QFont.Bold)
         wstart = self.width(fixed=True) - fsize*8
         self.renderText(wstart, 0.1*self.height(fixed=True),
