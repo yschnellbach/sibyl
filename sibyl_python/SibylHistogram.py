@@ -186,14 +186,15 @@ class SibylHistogram(gl.GLViewWidget):
     def drawLegend(self):
         margin = 11
         padding = 6
+        pixRatio = super(SibylHistogram,self).devicePixelRatio() #needed to scale font size and wstart
         self.qglColor(Qt.white)
         cmask = (self._parent.parameters['colorMask']).capitalize()
-        fsize = int(self.height(fixed=True)/14.0)
+        fsize = int(self.height()/(14.0*pixRatio))
         font = QFont("Times", fsize, QFont.Bold)
-        wstart = self.width(fixed=True) - fsize*8
-        self.renderText(wstart, 0.1*self.height(fixed=True),
+        wstart = self.width() - fsize*8*pixRatio
+        self.renderText(wstart/pixRatio, 0.1*self.height(fixed=True),
                 cmask, font=font)
-        self.renderText(wstart, 0.2*self.height(fixed=True), 
+        self.renderText(wstart/pixRatio, 0.2*self.height(fixed=True), 
                 self.txt, font=font)
 
     '''
