@@ -5,3 +5,4 @@ from .SibylTrayIcon  import SibylTrayIcon
 from .SibylTabEvent  import SibylTabEvent
 from .SibylTabAbout  import SibylTabAbout
 from .SibylState     import SibylState
+from .SibylMenuBar   import SibylMenuBar

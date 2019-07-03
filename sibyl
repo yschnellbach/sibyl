@@ -143,10 +143,7 @@ class MainWindow(QtGui.QMainWindow):
         #formLayout.addRow(self.hboxchooser)
 
     def _menubarWidget(self):
-        fileMenu = self.menuBar().addMenu("File")
-        closeAction = fileMenu.addAction("Close")
-        closeAction.triggered.connect(self.close)
-        closeAction.setShortcut("CTRL+W")
+        self.fileMenu = SibylMenuBar( self )
 
     def close(self):
         self.state.saveState()
