@@ -6,6 +6,7 @@ from .Sibyl2DViewer import Sibyl2DViewer, SibylWatchmanFlat
 from .Sibyl3DViewer import Sibyl3DViewer
 from .SibylHistogram import SibylHistogram
 import pyqtgraph.opengl as gl
+import os.path as path
 
 class SibylTabEvent(SibylTab):
     '''
@@ -32,7 +33,9 @@ class SibylTabEvent(SibylTab):
         ## Fit current event
         fit_button = QPushButton()
         fit_button.clicked.connect(self.performFit)
-        fit_button.setIcon(QIcon('assets/bonsai.png'))
+        logoFile = path.join( path.dirname( path.abspath(__file__) ),
+                'assets/bonsai.png')
+        fit_button.setIcon(QIcon(logoFile))
         fit_button.setToolTip('Bonsai!')
         self.hboxchooser.addWidget(fit_button)
 
