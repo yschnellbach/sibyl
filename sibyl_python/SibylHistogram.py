@@ -189,7 +189,7 @@ class SibylHistogram(gl.GLViewWidget):
         pixRatio = super(SibylHistogram,self).devicePixelRatio() #needed to scale font size and wstart
         self.qglColor(Qt.white)
         cmask = (self._parent.parameters['colorMask']).capitalize()
-        fsize = int(self.height()/(14.0*pixRatio))
+        fsize = int(self.width()/(14.0*pixRatio))
         font = QFont("Times", fsize, QFont.Bold)
         wstart = self.width() - fsize*8*pixRatio
         self.renderText(wstart/pixRatio, 0.1*self.height(fixed=True),

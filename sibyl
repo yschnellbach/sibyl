@@ -8,8 +8,8 @@ import matplotlib.cm as cm
 import argparse
 import pyqtgraph as pg
 import pyqtgraph.opengl as gl
-import rat
-import ROOT
+#import rat
+#import ROOT
 from sibyl_cpp import *
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
@@ -259,7 +259,7 @@ def get_args():
     return parser.parse_args()
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, lambda *args: QtGui.QApplication.quit())
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     args = get_args()
     def dprint(*argmnt):
         if args.debug:
