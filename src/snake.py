@@ -81,13 +81,16 @@ class snake:
         self._getTrackNames.restype = c_int_pointer
         self._getTrackNames.argstypes = []
 
+# TODO done
     def openFile(self, fname):
         print(fname)
         self._openFile(fname.encode())
 
+# TODO done
     def getEvent(self, idx):
         self._getEvent(idx)
 
+# TODO done
     def getEntries(self):
         return self._getEntries()
 
@@ -117,6 +120,7 @@ class snake:
         self._freeSquare()
         return newarr
 
+# TODO done
     ## Tracking information
     def getTracking(self):
         self._getTracking()
