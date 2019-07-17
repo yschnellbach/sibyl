@@ -13,19 +13,12 @@
 #include <RAT/DS/Root.hh>
 #include <RAT/DS/Run.hh>
 
-#include <pybind11/numpy.h>  // Use numpy arrays
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>  // Use numpy arrays
 
 namespace py = pybind11;
 
 double num = 42.0;
-
-/* Performs elementwise squaring of an array */
-py::Array<double> square(py::Array<double> arr) {
-  py::Array<double> retArr;
-  for (int i = 0; i < size; i++) retArr[i] = arr[i] * arr[i];
-  return retArr;
-}
 
 int entries = 0;
 int pmtcount = 0;
@@ -205,7 +198,6 @@ PYBIND11_DEF_MODULE(snake, m) {
   m.def("getEntries", &getEntries);
   m.def("getXYZ", &getXYZ);
   m.def("getHitInfo", &getHitInfo);
-  m.def("square", &square, "arr"_a);
   m.def("getTracking", &getTracking);
   m.def("getTrackSteps", &getTrackSteps);
 }

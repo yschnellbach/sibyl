@@ -140,10 +140,3 @@ class snake:
         n_arr = np.fromiter(n_ret, dtype=np.int64, count=tsteps)
         return x_arr, y_arr, z_arr, n_arr
 
-
-if __name__ == "__main__":
-    a = np.random.rand(10)
-    cobra = snake()
-    cobra.square(a)
-    cobra.openFile("cobalt_watchman.root")
-    cobra.getEvent(0)
