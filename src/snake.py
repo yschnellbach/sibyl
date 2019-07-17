@@ -94,6 +94,7 @@ class snake:
     def getEntries(self):
         return self._getEntries()
 
+# TODO done
     def getXYZ(self):
         pmtc = self._getPMTCount()
         x_ret = self._getPMTX()
@@ -104,6 +105,7 @@ class snake:
         z_arr = np.fromiter(z_ret, dtype=np.float64, count=pmtc)
         return x_arr, y_arr, z_arr
 
+# TODO done
     def getHitInfo(self):
         pmtc = self._getPMTCount()
         c_ret = self._getCharge()
@@ -112,6 +114,7 @@ class snake:
         t_arr = np.fromiter(t_ret, dtype=np.float64, count=pmtc)
         return c_arr, t_arr
 
+#TODO done
     def square(self, arr):
         arr = np.array(arr, dtype=np.float64)
         asend = arr.ctypes.data_as(c_double_pointer)

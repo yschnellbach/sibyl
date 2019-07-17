@@ -13,24 +13,26 @@
 #include <RAT/DS/Root.hh>
 #include <RAT/DS/Run.hh>
 
-extern "C" {
-double* retArr;
+#include <pybind11/numpy.h>  // Use numpy arrays
+#include <pybind11/pybind11.h>
+
+namespace py = pybind11;
+
 double num = 42.0;
-double* square(double* arr, int size) {
-  retArr = (double*)malloc(size * sizeof(double));
-  for (int i = 0; i < size; i++) {
-    retArr[i] = arr[i] * arr[i];
-  }
-  num += 1;
+
+/* Performs elementwise squaring of an array */
+py::Array<double> square(py::Array<double> arr) {
+  py::Array<double> retArr;
+  for (int i = 0; i < size; i++) retArr[i] = arr[i] * arr[i];
   return retArr;
 }
-void freeSquare() { free(retArr); }
 
 int entries = 0;
 int pmtcount = 0;
 TFile* tfile;
 TTree* runT;
 TTree* T;
+// TODO can I rewrite this using vectors or py::array?
 double* pmt_posx;
 double* pmt_posy;
 double* pmt_posz;
@@ -41,20 +43,25 @@ double* pmt_time;
 RAT::DS::Run* run;
 RAT::DS::PMTInfo* pmtinfo;
 RAT::DS::Root* ds;
-void openFile(char* p) {
-  tfile = new TFile(p);
+
+/*
+ * Opens RATPAC root file
+ */
+void openFile(string filename) {
+  std::cout << "Opening " << filename << std::endl;
+  tfile = new TFile(filename);
   // PMT Info
   runT = (TTree*)tfile->Get("runT");
   runT->SetBranchAddress("run", &run);
   runT->GetEntry(0);
   pmtinfo = run->GetPMTInfo();
   pmtcount = pmtinfo->GetPMTCount();
-  printf("PMTs: %i\n", pmtcount);
-  pmt_posx = (double*)malloc(pmtcount * sizeof(double));
-  pmt_posy = (double*)malloc(pmtcount * sizeof(double));
-  pmt_posz = (double*)malloc(pmtcount * sizeof(double));
-  pmt_charge = (double*)malloc(pmtcount * sizeof(double));
-  pmt_time = (double*)malloc(pmtcount * sizeof(double));
+  std::cout << "PMTs: " << pmtcount << std::endl;
+  pmt_posx = (double*) malloc(pmtcount * sizeof(double));
+  pmt_posy = (double*) malloc(pmtcount * sizeof(double));
+  pmt_posz = (double*) malloc(pmtcount * sizeof(double));
+  pmt_charge = (double*) malloc(pmtcount * sizeof(double));
+  pmt_time = (double*) malloc(pmtcount * sizeof(double));
   for (int i = 0; i < pmtcount; i++) {
     TVector3 v = pmtinfo->GetPosition(i);
     pmt_posx[i] = v.X();
@@ -64,14 +71,17 @@ void openFile(char* p) {
 
   T = (TTree*)tfile->Get("T");
   entries = T->GetEntries();
-  printf("Entries: %i\n", entries);
+  std::cout << "Entries: " << entries << std::endl;
   T->SetBranchAddress("ds", &ds);
 }
 
+/* Return entries from opened TTree */
 int getEntries() { return entries; }
 
 RAT::DS::EV* ev;
 int nhit = 0;
+
+/* Get one event from opened TTree */
 void getEvent(int event) {
   // clear last event;
   T->GetEvent(event);
@@ -140,9 +150,62 @@ int* getTrackNames() { return &pnames[0]; }
 
 int getNHit() { return nhit; }
 int getPMTCount() { return pmtcount; }
-double* getPMTX() { return pmt_posx; }
-double* getPMTY() { return pmt_posy; }
-double* getPMTZ() { return pmt_posz; }
-double* getCharge() { return pmt_charge; }
-double* getTime() { return pmt_time; }
+
+// TODO how to cast from double* to pyarray
+py::Array<double> getPMTX() { 
+  py::Array<double> ret(xtrack.size());
+  return pmt_posx; 
+  }
+py::Array<double> getPMTY() { 
+  py::Array<double> ret(xtrack.size());
+  return pmt_posy; 
+  }
+py::Array<double> getPMTZ() { 
+  py::Array<double> ret(xtrack.size());
+  return pmt_posz; 
+  }
+py::Array<double> getCharge() { 
+  py::Array<double> ret(xtrack.size());
+  return pmt_charge; 
+  }
+py::Array<double> getTime() { 
+  py::Array<double> ret(xtrack.size());
+  return pmt_time; 
+  }
+
+void getXYZ() {
+  py::Array<double> x = getPMTX();
+  py::Array<double> y = getPMTY();
+  py::Array<double> z = getPMTZ();
+  return x, y, z;
+}
+
+// TODO how to return the two objects as tuple?
+void getHitInfo() {
+  int num_pmt = getPMTCount();
+  py::Array<double> charge = getCharge();
+  py::Array<double> time = getTime();
+  return charge, time;
+}
+
+void getTrackSteps() {
+  int track_steps = getTrackCount();
+  py::Array<double> x_track = getTrackX();
+  py::Array<double> y_track = getTrackY();
+  py::Array<double> z_track = getTrackZ();
+  py::Array<int> names = getTrackNames();
+  return x_track, y_track, z_track, names;
+}
+
+/* Create python bindings */
+
+PYBIND11_DEF_MODULE(snake, m) {
+  m.def("openFile", &openFile, "filename"_a);
+  m.def("getEvent", &getEvent, "event"_a);
+  m.def("getEntries", &getEntries);
+  m.def("getXYZ", &getXYZ);
+  m.def("getHitInfo", &getHitInfo);
+  m.def("square", &square, "arr"_a);
+  m.def("getTracking", &getTracking);
+  m.def("getTrackSteps", &getTrackSteps);
 }
