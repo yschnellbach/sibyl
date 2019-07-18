@@ -11,7 +11,7 @@ import pyqtgraph.opengl as gl
 
 # import rat
 # import ROOT
-import snake # RAT cpp binding
+from snake import Snake  # RAT cpp binding
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
 from sibyl import *
@@ -205,20 +205,20 @@ class MainWindow(QtGui.QMainWindow):
 
     ## Rat, moveme to rat class
     def beginRat(self):
-        snake.openFile(self.parameters["filename"])
-        self.parameters["posArray"] = np.array(snake.getXYZ()).T
-        self.parameters["entries"] = snake.getEntries()
+        self.snake = Snake(self.parameters["filename"])
+        self.parameters["posArray"] = np.array(self.snake.getXYZ()).T
+        self.parameters["entries"] = self.snake.getEntries()
 
     def readRat(self):
         event = int(self.event.text())
-        snake.getEvent(event)
-        self.parameters["charge"], self.parameters["time"] = snake.getHitInfo()
+        self.snake.getEvent(event)
+        self.parameters["charge"], self.parameters["time"] = self.snake.getHitInfo()
         self.parameters["plWeights"] = np.zeros(len(self.parameters["charge"])) + 100
         self.parameters["plWeights"][self.parameters["charge"] > -99] = 300
 
     def readRatTracking(self):
-        snake.getTracking()
-        x, y, z, n = snake.getTrackSteps()
+        self.snake.getTracking()
+        x, y, z, n = self.snake.getTrackSteps()
         # Colors based on: ID and Process if optical
         # Yellow: electron
         clr_electron = (1, 1, 0, 1.0)

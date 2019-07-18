@@ -1,6 +1,7 @@
 from setuptools import setup, Extension, find_packages
 import os
 from subprocess import check_output, CalledProcessError
+import pybind11
 
 
 VERSION = "0.2.0"
@@ -27,9 +28,9 @@ except CalledProcessError:
 
 extensions = [
     Extension(
-        "fastrat",
-        ["sibyl_cpp/fastrat.cpp"],
-        include_dirs=[rat_incdir],
+        "snake",
+        ["src/snake.cpp"],
+        include_dirs=[rat_incdir, pybind11.get_include(), "src"],
         libraries=[rat_lib],
         library_dirs=[rat_libdir],
         extra_compile_args=root_args,
@@ -45,6 +46,7 @@ setup(
     scripts=["scripts/sibyl"],
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     install_requires=[
+        "pybind11",
         "matplotlib",
         "numpy",
         "pyqt5",
@@ -52,6 +54,5 @@ setup(
         "pyopengl",
         "markdown",
     ],
-    ext_package="sibyl_cpp",
     ext_modules=extensions,
 )

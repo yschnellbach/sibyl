@@ -1,48 +1,19 @@
-#include "stdio.h"
-#include "stdlib.h"
+#include "Snake.h"
+#include <iostream>
 
-#include <string>
-#include <vector>
-
-#include <TFile.h>
-#include <TTree.h>
+#include <TString.h>
 #include <TVector3.h>
 
-#include <RAT/DS/PMT.hh>
-#include <RAT/DS/PMTInfo.hh>
-#include <RAT/DS/Root.hh>
-#include <RAT/DS/Run.hh>
-
-#include <pybind11/pybind11.h>
-#include <pybind11/numpy.h>  // Use numpy arrays
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
+using namespace py::literals;  // For _a arguments
 
 double num = 42.0;
 
-int entries = 0;
-int pmtcount = 0;
-TFile* tfile;
-TTree* runT;
-TTree* T;
-// TODO can I rewrite this using vectors or py::array?
-double* pmt_posx;
-double* pmt_posy;
-double* pmt_posz;
-
-double* pmt_charge;
-double* pmt_time;
-
-RAT::DS::Run* run;
-RAT::DS::PMTInfo* pmtinfo;
-RAT::DS::Root* ds;
-
-/*
- * Opens RATPAC root file
- */
-void openFile(string filename) {
+Snake::Snake(std::string filename) {
   std::cout << "Opening " << filename << std::endl;
-  tfile = new TFile(filename);
+  tfile = new TFile((TString)filename);
   // PMT Info
   runT = (TTree*)tfile->Get("runT");
   runT->SetBranchAddress("run", &run);
@@ -50,16 +21,14 @@ void openFile(string filename) {
   pmtinfo = run->GetPMTInfo();
   pmtcount = pmtinfo->GetPMTCount();
   std::cout << "PMTs: " << pmtcount << std::endl;
-  pmt_posx = (double*) malloc(pmtcount * sizeof(double));
-  pmt_posy = (double*) malloc(pmtcount * sizeof(double));
-  pmt_posz = (double*) malloc(pmtcount * sizeof(double));
-  pmt_charge = (double*) malloc(pmtcount * sizeof(double));
-  pmt_time = (double*) malloc(pmtcount * sizeof(double));
+  // Initialize vecs
+  pmt_charge.resize(pmtcount);
+  pmt_time.resize(pmtcount);
   for (int i = 0; i < pmtcount; i++) {
     TVector3 v = pmtinfo->GetPosition(i);
-    pmt_posx[i] = v.X();
-    pmt_posy[i] = v.Y();
-    pmt_posz[i] = v.Z();
+    pmt_posx.push_back(v.X());
+    pmt_posy.push_back(v.Y());
+    pmt_posz.push_back(v.Z());
   }
 
   T = (TTree*)tfile->Get("T");
@@ -68,17 +37,10 @@ void openFile(string filename) {
   T->SetBranchAddress("ds", &ds);
 }
 
-/* Return entries from opened TTree */
-int getEntries() { return entries; }
-
-RAT::DS::EV* ev;
-int nhit = 0;
-
 /* Get one event from opened TTree */
-void getEvent(int event) {
+void Snake::getEvent(int event) {
   // clear last event;
   T->GetEvent(event);
-
   // reset pmt hits
   for (int i = 0; i < pmtcount; i++) {
     pmt_charge[i] = -100;
@@ -98,13 +60,7 @@ void getEvent(int event) {
   }
 }
 
-std::vector<double> xtrack, ytrack, ztrack;
-std::vector<int> pnames;
-std::map<std::string, int> pnmap = {
-    {"Cerenkov", 1}, {"Scintillation", 2}, {"Reemission", 2},  // from scint.
-    {"e-", 3},       {"gamma", 4},         {"mu-", 5},        {"mu+", 5}};
-
-void getTracking() {
+void Snake::getTracking() {
   RAT::DS::MC* mc = ds->GetMC();
   int nTracks = mc->GetMCTrackCount();
   // Loop over each track
@@ -135,69 +91,36 @@ void getTracking() {
   }
 }
 
-int getTrackCount() { return xtrack.size(); }
-double* getTrackX() { return &xtrack[0]; }
-double* getTrackY() { return &ytrack[0]; }
-double* getTrackZ() { return &ztrack[0]; }
-int* getTrackNames() { return &pnames[0]; }
-
-int getNHit() { return nhit; }
-int getPMTCount() { return pmtcount; }
-
-// TODO how to cast from double* to pyarray
-py::Array<double> getPMTX() { 
-  py::Array<double> ret(xtrack.size());
-  return pmt_posx; 
-  }
-py::Array<double> getPMTY() { 
-  py::Array<double> ret(xtrack.size());
-  return pmt_posy; 
-  }
-py::Array<double> getPMTZ() { 
-  py::Array<double> ret(xtrack.size());
-  return pmt_posz; 
-  }
-py::Array<double> getCharge() { 
-  py::Array<double> ret(xtrack.size());
-  return pmt_charge; 
-  }
-py::Array<double> getTime() { 
-  py::Array<double> ret(xtrack.size());
-  return pmt_time; 
-  }
-
-void getXYZ() {
-  py::Array<double> x = getPMTX();
-  py::Array<double> y = getPMTY();
-  py::Array<double> z = getPMTZ();
-  return x, y, z;
+py::tuple Snake::getXYZ() {
+  py::array_t<double> x = py::array(pmt_posx.size(), pmt_posx.data());
+  py::array_t<double> y = py::array(pmt_posy.size(), pmt_posy.data());
+  py::array_t<double> z = py::array(pmt_posz.size(), pmt_posz.data());
+  return py::make_tuple(x, y, z);
 }
 
-// TODO how to return the two objects as tuple?
-void getHitInfo() {
-  int num_pmt = getPMTCount();
-  py::Array<double> charge = getCharge();
-  py::Array<double> time = getTime();
-  return charge, time;
+py::tuple Snake::getHitInfo() {
+  py::array_t<double> charge = py::array(pmt_charge.size(), pmt_charge.data());
+  py::array_t<double> time = py::array(pmt_time.size(), pmt_time.data());
+  return py::make_tuple(charge, time);
 }
 
-void getTrackSteps() {
-  int track_steps = getTrackCount();
-  py::Array<double> x_track = getTrackX();
-  py::Array<double> y_track = getTrackY();
-  py::Array<double> z_track = getTrackZ();
-  py::Array<int> names = getTrackNames();
-  return x_track, y_track, z_track, names;
+py::tuple Snake::getTrackSteps() {
+  py::array_t<double> x_track = py::array(xtrack.size(), xtrack.data());
+  py::array_t<double> y_track = py::array(ytrack.size(), ytrack.data());
+  py::array_t<double> z_track = py::array(ztrack.size(), ztrack.data());
+  py::array_t<int> names = py::array(pnames.size(), pnames.data());
+  return py::make_tuple(x_track, y_track, z_track, names);
 }
 
 /* Create python bindings */
 
-PYBIND11_DEF_MODULE(snake, m) {
-  m.def("openFile", &openFile, "filename"_a);
-  m.def("getEvent", &getEvent, "event"_a);
-  m.def("getEntries", &getEntries);
-  m.def("getXYZ", &getXYZ);
-  m.def("getHitInfo", &getHitInfo);
-  m.def("getTracking", &getTracking);
-  m.def("getTrackSteps", &getTrackSteps);
+PYBIND11_MODULE(snake, m) {
+  py::class_<Snake>(m, "Snake")
+      .def(py::init<std::string>())
+      .def("getEvent", &Snake::getEvent, "event"_a)
+      .def("getEntries", &Snake::getEntries)
+      .def("getXYZ", &Snake::getXYZ)
+      .def("getHitInfo", &Snake::getHitInfo)
+      .def("getTracking", &Snake::getTracking)
+      .def("getTrackSteps", &Snake::getTrackSteps);
 }
