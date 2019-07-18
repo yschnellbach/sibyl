@@ -8,15 +8,17 @@ from .SibylHistogram import SibylHistogram
 import pyqtgraph.opengl as gl
 import os.path as path
 
+
 class SibylTabEvent(SibylTab):
-    '''
+    """
     Main event display tab.
-    '''
+    """
+
     def __init__(self, parent=None):
-        super(SibylTabEvent,self).__init__(parent)
+        super(SibylTabEvent, self).__init__(parent)
         self.buildWidget()
-        #self._parent.newEvent()
-        #self.drawEvent()
+        # self._parent.newEvent()
+        # self.drawEvent()
 
     def buildWidget(self):
         formGroupBox = QGroupBox()
@@ -33,17 +35,16 @@ class SibylTabEvent(SibylTab):
         ## Fit current event
         fit_button = QPushButton()
         fit_button.clicked.connect(self.performFit)
-        logoFile = path.join( path.dirname( path.abspath(__file__) ),
-                'assets/bonsai.png')
+        logoFile = path.join(path.dirname(path.abspath(__file__)), "assets/bonsai.png")
         fit_button.setIcon(QIcon(logoFile))
-        fit_button.setToolTip('Bonsai!')
+        fit_button.setToolTip("Bonsai!")
         self.hboxchooser.addWidget(fit_button)
 
         ## Put form together
         formGroupBox.setLayout(formLayout)
-        self.layout.addWidget(formGroupBox,5,12,4,4)
+        self.layout.addWidget(formGroupBox, 5, 12, 4, 4)
         self.figCanvas = SibylHistogram(self.App, self)
-        self.layout.addWidget(self.figCanvas,5,8,4,4)
+        self.layout.addWidget(self.figCanvas, 5, 8, 4, 4)
 
         # If we want to pop-out widgets instead of putting them
         # into a layout, simply use widget.show() i.e.
@@ -51,12 +52,12 @@ class SibylTabEvent(SibylTab):
 
         ## Now the 3D graph
         self.plot3DView = gl.GLScatterPlotItem(pxMode=False)
-        self.plotTracks = gl.GLLinePlotItem(mode='lines', color=(1,0,0,0.1))
+        self.plotTracks = gl.GLLinePlotItem(mode="lines", color=(1, 0, 0, 0.1))
         self.plotFlatMap = SibylWatchmanFlat()
         self.glWin = Sibyl3DViewer(self.plot3DView, self.plotTracks, self.App)
         self.flatMapWindow = Sibyl2DViewer(self.plotFlatMap, self.App)
-        self.layout.addWidget(self.flatMapWindow,0,0,9,8)
-        self.layout.addWidget(self.glWin,0,8,5,8)
+        self.layout.addWidget(self.flatMapWindow, 0, 0, 9, 8)
+        self.layout.addWidget(self.glWin, 0, 8, 5, 8)
 
         # Fix the column and row stretch
         for r in range(9):
@@ -67,21 +68,25 @@ class SibylTabEvent(SibylTab):
         self.setLayout(self.layout)
 
     def performFit(self):
-        print('Bonsai!')
+        print("Bonsai!")
 
     def toggleColorMode(self):
-        if self.parameters['colorMask'] == 'charge':
-            self.parameters['colorMask'] = 'time'
+        if self.parameters["colorMask"] == "charge":
+            self.parameters["colorMask"] = "time"
         else:
-            self.parameters['colorMask'] = 'charge'
+            self.parameters["colorMask"] = "charge"
         self.drawEvent()
 
     def drawEvent(self):
         self.colorize()
         ## 3D Viewport
         if self.plot3DView is None:
-            self.plot3DView = gl.GLScatterPlotItem(pos=self.parameters["posArray"],
-                    color=self.colorArray, size=self.parameters["plWeights"], pxMode=False)
+            self.plot3DView = gl.GLScatterPlotItem(
+                pos=self.parameters["posArray"],
+                color=self.colorArray,
+                size=self.parameters["plWeights"],
+                pxMode=False,
+            )
         else:
             self.plot3DView.pos = self.parameters["posArray"]
             self.plot3DView.color = self.colorArray
@@ -93,7 +98,7 @@ class SibylTabEvent(SibylTab):
         self.plotFlatMap.setWeights(self.parameters["plWeights"])
         self.plotFlatMap.update()
 
-        if self.parameters['colorMask'] == 'charge':
+        if self.parameters["colorMask"] == "charge":
             variable = self.parameters["charge"]
         else:
             variable = self.parameters["time"]
@@ -106,9 +111,9 @@ class SibylTabEvent(SibylTab):
             self.plotTracks.update()
 
     def drawColors(self):
-        '''
+        """
         Only update colors, not positions or sizes
-        '''
+        """
         self.colorize()
         self.plot3DView.color = self.colorArray
         self.plot3DView.update()
@@ -117,7 +122,7 @@ class SibylTabEvent(SibylTab):
 
     def colorize(self):
         # choose color mask, charge for now
-        if self.parameters['colorMask'] == 'charge':
+        if self.parameters["colorMask"] == "charge":
             variable = self.parameters["charge"]
         else:
             variable = self.parameters["time"]
@@ -125,13 +130,13 @@ class SibylTabEvent(SibylTab):
         min_var = true_min
         max_var = self.parameters["histXMax"]
         if self.parameters["onlyHits"]:
-            null_color = [1,1,1,0.0]
+            null_color = [1, 1, 1, 0.0]
         else:
-            null_color = [1,1,1,0.25]
+            null_color = [1, 1, 1, 0.25]
         var_range = max_var - min_var
-        varNorm = (variable-min_var)*1/var_range
-        self.colorArray = self.parameters['colorMap'](varNorm)
-        self.colorArray[variable<true_min] = null_color
+        varNorm = (variable - min_var) * 1 / var_range
+        self.colorArray = self.parameters["colorMap"](varNorm)
+        self.colorArray[variable < true_min] = null_color
         ## Invisible hack
         if self.parameters["invisible"]:
             self.colorArray *= 0

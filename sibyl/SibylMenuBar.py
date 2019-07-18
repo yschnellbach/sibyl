@@ -1,12 +1,15 @@
 from PyQt5.QtWidgets import QMenuBar
-#from PyQt5 import QtGui
+
+# from PyQt5 import QtGui
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 
+
 class SibylMenuBar:
-    '''
+    """
     Menu bar
-    '''
+    """
+
     def __init__(self, parent):
         self.parent = parent
         self.menubar = self.parent.menuBar()
@@ -30,10 +33,12 @@ class SibylMenuBar:
     def openOptions(self):
         self.optionsMenu = SibylOptions(self.parent, self)
 
+
 class SibylOptions(QDialog):
-    App=None
+    App = None
+
     def __init__(self, app=None, parent=None):
-        super(SibylOptions,self).__init__()
+        super(SibylOptions, self).__init__()
         if self.App is None:
             if app is not None:
                 self.App = app
@@ -49,9 +54,9 @@ class SibylOptions(QDialog):
         k = QApplication.desktop()
         w = k.screenGeometry().width()
         h = k.screenGeometry().height()
-        self.move( (w-self.width())*0.1, (h-self.height())/2 )
+        self.move((w - self.width()) * 0.1, (h - self.height()) / 2)
         self.setWindowTitle("Options")
 
     def keyPressEvent(self, ev):
-        if ( ev.key() == ord('W') ) and ( ev.modifiers() & Qt.ControlModifier ):
+        if (ev.key() == ord("W")) and (ev.modifiers() & Qt.ControlModifier):
             self.close()
