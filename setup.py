@@ -6,7 +6,7 @@ __version__ = "0.2.0"
 
 try:
     RATROOT = os.environ["RATROOT"]
-except OSError:
+except KeyError:
     print(
         "could not detect RATROOT. Make sure you have source 'ratpac.sh' before installing"
     )
