@@ -11,7 +11,7 @@ import pyqtgraph.opengl as gl
 
 # import rat
 # import ROOT
-from snake import Snake  # RAT cpp binding
+from sibyl.snake import Snake  # RAT cpp binding
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
 from sibyl import *
