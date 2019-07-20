@@ -4,6 +4,19 @@ from subprocess import check_output, CalledProcessError
 
 __version__ = "0.2.0"
 
+
+class pybind_get_include:
+    """Hack to get pybind incdirs AFTER it has been installed"""
+
+    def __init__(self, user=False):
+        self.user = user
+
+    def __str__(self):
+        import pybind11
+
+        return pybind11.get_include(self.user)
+
+
 try:
     RATROOT = os.environ["RATROOT"]
 except KeyError:
@@ -26,13 +39,12 @@ except CalledProcessError:
         "Error calling 'root-config'. Make sure you have sourced 'thisroot.sh' before installing"
     )
 
-from pybind11 import get_include
 
 extensions = [
     Extension(
         "snake",
         ["src/snake.cpp"],
-        include_dirs=[rat_incdir, get_include(), "src"],
+        include_dirs=[rat_incdir, pybind_get_include(), "src"],
         libraries=[rat_lib],
         library_dirs=[rat_libdir],
         extra_compile_args=root_args,
@@ -48,6 +60,7 @@ setup(
     scripts=["scripts/sibyl"],
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
     install_requires=[
+        "pybind11",
         "matplotlib",
         "numpy",
         "pyqt5",
