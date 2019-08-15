@@ -1,6 +1,7 @@
 import ctypes as ct
 import os
 import numpy as np
+from glob import glob
 
 c_int = ct.c_int
 c_double = ct.c_double
@@ -8,7 +9,10 @@ c_void_p = ct.c_void_p
 c_char_p = ct.c_char_p
 c_double_pointer = ct.POINTER(c_double)
 c_int_pointer = ct.POINTER(c_int)
-libname = os.path.join( os.path.dirname( os.path.abspath(__file__) ), 'libfastrat.so' )
+libname = glob(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "fastrat.*.so")
+)[0]
+
 
 class snake:
     def __init__(self):
@@ -54,7 +58,7 @@ class snake:
         self._getCharge = self.lib.getCharge
         self._getCharge.restype = c_double_pointer
         self._getCharge.argstypes = []
-        self._getTime= self.lib.getTime
+        self._getTime = self.lib.getTime
         self._getTime.restype = c_double_pointer
         self._getTime.argstypes = []
 
@@ -79,10 +83,10 @@ class snake:
 
     def openFile(self, fname):
         print(fname)
-        self._openFile( fname.encode() )
+        self._openFile(fname.encode())
 
     def getEvent(self, idx):
-        self._getEvent( idx )
+        self._getEvent(idx)
 
     def getEntries(self):
         return self._getEntries()
@@ -108,7 +112,7 @@ class snake:
     def square(self, arr):
         arr = np.array(arr, dtype=np.float64)
         asend = arr.ctypes.data_as(c_double_pointer)
-        areturn = self.l_square(asend, len(arr) )
+        areturn = self.l_square(asend, len(arr))
         newarr = np.fromiter(areturn, dtype=np.float64, count=len(arr))
         self._freeSquare()
         return newarr
@@ -129,9 +133,10 @@ class snake:
         n_arr = np.fromiter(n_ret, dtype=np.int64, count=tsteps)
         return x_arr, y_arr, z_arr, n_arr
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     a = np.random.rand(10)
     cobra = snake()
     cobra.square(a)
-    cobra.openFile('cobalt_watchman.root')
+    cobra.openFile("cobalt_watchman.root")
     cobra.getEvent(0)
