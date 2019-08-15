@@ -11,10 +11,10 @@ import pyqtgraph.opengl as gl
 
 # import rat
 # import ROOT
-from sibyl_cpp import *
+from sibyl.snake import Snake  # RAT cpp binding
 from PyQt5 import *
 from PyQt5.QtOpenGL import *
-from sibyl_python import *
+from sibyl import *
 
 """ -- Sibyl Event Viewer --> Central Widget
 |------------------------------------------|
@@ -205,21 +205,20 @@ class MainWindow(QtGui.QMainWindow):
 
     ## Rat, moveme to rat class
     def beginRat(self):
-        self.cobra = snake()
-        self.cobra.openFile(self.parameters["filename"])
-        self.parameters["posArray"] = np.array(self.cobra.getXYZ()).T
-        self.parameters["entries"] = self.cobra.getEntries()
+        self.snake = Snake(self.parameters["filename"])
+        self.parameters["posArray"] = np.array(self.snake.getXYZ()).T
+        self.parameters["entries"] = self.snake.getEntries()
 
     def readRat(self):
         event = int(self.event.text())
-        self.cobra.getEvent(event)
-        self.parameters["charge"], self.parameters["time"] = self.cobra.getHitInfo()
+        self.snake.getEvent(event)
+        self.parameters["charge"], self.parameters["time"] = self.snake.getHitInfo()
         self.parameters["plWeights"] = np.zeros(len(self.parameters["charge"])) + 100
         self.parameters["plWeights"][self.parameters["charge"] > -99] = 300
 
     def readRatTracking(self):
-        self.cobra.getTracking()
-        x, y, z, n = self.cobra.getTrackSteps()
+        self.snake.getTracking()
+        x, y, z, n = self.snake.getTrackSteps()
         # Colors based on: ID and Process if optical
         # Yellow: electron
         clr_electron = (1, 1, 0, 1.0)

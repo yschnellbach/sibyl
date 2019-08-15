@@ -238,3 +238,6 @@ dmypy.json
 .history
 
 # End of https://www.gitignore.io/api/c,c++,macos,python,visualstudiocode
+
+Pipfile.lock
+!tests/positron_samples.root
