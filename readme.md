@@ -18,13 +18,13 @@ To install, first make sure you source ROOT and RAT-PAC
 
 then continue using `pip` or `setuptools`
 
-    $ pip install --user git+https://github.com/ait-watchman/sibyl#egg=sibyl
+    $ python3 -m pip install --user git+https://github.com/ait-watchman/sibyl#egg=sibyl
 
 or to keep a local version
 
     $ git clone https://github.com/ait-watchman/sibyl
     $ cd sibyl
-    $ pip install --user .
+    $ python3 -m pip install --user .
 
 Usage
 -----
