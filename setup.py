@@ -1,9 +1,9 @@
 import os
+import sys
 from setuptools import setup, Extension, find_packages
 from subprocess import check_output, CalledProcessError
 
 __version__ = "0.2.0"
-
 
 class pybind_get_include:
     """Hack to get pybind incdirs AFTER it has been installed"""
@@ -13,7 +13,6 @@ class pybind_get_include:
 
     def __str__(self):
         import pybind11
-
         return pybind11.get_include(self.user)
 
 
@@ -47,9 +46,10 @@ extensions = [
         include_dirs=[
             rat_incdir, 
             pybind_get_include(),
-            pybind_get_include(), 
+            pybind_get_include(user=True), 
             "src"
         ],
+        language='c++',
         libraries=[rat_lib],
         library_dirs=[rat_libdir],
         extra_compile_args=root_args,
@@ -64,16 +64,17 @@ setup(
     author_email="maskins@berkeley.edu",
     scripts=["scripts/sibyl"],
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
-    setup_requires=[
-        "pybind11"
-    ],
     install_requires=[
         "matplotlib",
+        "pybind11",
         "numpy",
         "pyqt5",
         "pyqtgraph",
         "pyopengl",
         "markdown",
+    ],
+    setup_requires=[
+        "pybind11",
     ],
     install_package_data=True,
     package_data={"sibyl": ["assets/*"]},
