@@ -64,8 +64,10 @@ setup(
     author_email="maskins@berkeley.edu",
     scripts=["scripts/sibyl"],
     packages=find_packages(exclude=["tests", "*.tests", "*.tests.*", "tests.*"]),
+    setup_requires=[
+        "pybind11"
+    ],
     install_requires=[
-        "pybind11",
         "matplotlib",
         "numpy",
         "pyqt5",
