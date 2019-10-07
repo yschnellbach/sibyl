@@ -18,7 +18,7 @@ To install, first make sure you source ROOT and RAT-PAC
 
 then continue using `pip` or `setuptools`
 
-    $ pip install git+https://github.com/ait-watchman/sibyl#egg=sibyl
+    $ pip install --user git+https://github.com/ait-watchman/sibyl#egg=sibyl
 
 or to keep a local version
 
