@@ -16,7 +16,7 @@ class SibylTabAbout(SibylTab):
 
     def buildWidget(self):
         filename = path.join(
-            path.dirname(path.abspath(__file__)), "assets", "README.md"
+            path.dirname(path.abspath(__file__)), "assets", "readme.md"
         )
         with open(filename) as rr:
             text = rr.read()

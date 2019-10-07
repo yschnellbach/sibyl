@@ -24,7 +24,7 @@ or to keep a local version
 
     $ git clone https://github.com/ait-watchman/sibyl
     $ cd sibyl
-    $ pip install -e .
+    $ pip install --user .
 
 Usage
 -----
