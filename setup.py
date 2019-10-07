@@ -44,7 +44,12 @@ extensions = [
     Extension(
         "snake",
         ["src/snake.cpp"],
-        include_dirs=[rat_incdir, pybind_get_include(), "src"],
+        include_dirs=[
+            rat_incdir, 
+            pybind_get_include(),
+            pybind_get_include(), 
+            "src"
+        ],
         libraries=[rat_lib],
         library_dirs=[rat_libdir],
         extra_compile_args=root_args,
