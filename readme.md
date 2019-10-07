@@ -9,21 +9,62 @@ Sibyl is a simple pythonic event viewer that will interact with rat-pac to
 provide a 2d and 3d event display. The display itself is meant to look modern
 and be cross-platform, with the only strong dependency being on rat-pac.
 
-Install
--------
-Currently the only compiled component of Sibyl is the root data structure reader
-in sibyl_cpp. To install simply run make from the base directory or sibyl_cpp.
+Installation
+------------
+To install, first make sure you source ROOT and RAT-PAC
+
+    $ source <root_install>/bin/thisroot.sh
+    $ source <ratpac_install>/bin/ratpac.sh
+
+then continue using `pip` or `setuptools`
+
+    $ pip install git+https://github.com/ait-watchman/sibyl#egg=sibyl
+
+or to keep a local version
+
+    $ git clone https://github.com/ait-watchman/sibyl
+    $ cd sibyl
+    $ pip install --user .
+
+Usage
+-----
+
+After installing, you will have a script called `sibyl` that you call from the command line
+
+    $ sibyl -h
+    usage: sibyl [-h] [--debug] [--tracking]
+                [--cherenkov_brightness CHERENKOV_BRIGHTNESS] [--invisible]
+                [--onlyHits] [--stream]
+                ratfile
+
+    positional arguments:
+    ratfile               rat root file
+
+    optional arguments:
+    -h, --help            show this help message and exit
+    --debug               Turn on debug print statements
+    --tracking            ROOT files only. If storeTracking was used during
+                            simulation, then the particle tracks will be drawn.
+    --cherenkov_brightness CHERENKOV_BRIGHTNESS
+                            Scale cherenkov when showing tracks
+    --invisible           This is a hack, remove eventually
+    --onlyHits            Show only hit pmts
+    --stream              Hack to test streaming capabilities
+
+or in cases of complicated python environments
+
+    $ python -m sibyl ...
+    
+
 
 Dependencies
 ------------
 ### Required
 - Python3
-- PyQt5
-- PyQtGraph
-- python-opengl
+- Qt5 with OpenGL support
 - rat-pac (compiled with ROOT-6)
 ### Optional
-- python-markdown -- properly display the readme page in the about tab
+- markdown -- properly display the readme page in the about tab
 - Plotly -- Useful for a web conversion, not currently implemented.
 - SnakeViz is nice for visualizing cProfile
 
